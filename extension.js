@@ -4,13 +4,17 @@ const vscode = require('vscode');
 const axios = require('axios').default;
 
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 /**
+ * This method is called when your extension is activated
+ * The extension is activated the very first time the command is executed
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
 
+	createStatusBarItem(context);
+
+	const collection = vscode.languages.createDiagnosticCollection('webcollection');
+	
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -18,38 +22,35 @@ function activate(context) {
 		// This code will be executed every time the command is executed
 
 		if(!vscode.window.activeTextEditor){
-			vscode.window.showInformationMessage('Open an HTML file first');
+			vscode.window.showWarningMessage('Open an HTML file first');
 			return;
 		}
 		if(vscode.window.activeTextEditor.document.languageId != "html"){
-			vscode.window.showInformationMessage('Not an HTML file.');
+			vscode.window.showWarningMessage('Not an HTML file.');
 			return;
 		}
 
-		vscode.window.showInformationMessage('W3C Validation starting on this HTML file !');
+		collection.clear();
+
+		vscode.window.showInformationMessage('Validation starting on this HTML file...');
 
 		const filecontent = vscode.window.activeTextEditor.document.getText();
 
+		//Request header
 		const headers = {
 			'Content-type': 'text/html; charset=utf-8',
 		}
-	
+		
+		//Starting axios request
 		axios.post('https://validator.w3.org/nu/?out=json', filecontent, {
 			headers: headers,
 		})
 		.then(function (response) {
-			if (response.data) {
-				if (response.data.messages.length > 0){
-					vscode.window.showErrorMessage('Errors found');
-					const errors = response.data.messages;
-					// errors.forEach(error => {
-						
-					// });
-					vscode.window.showErrorMessage("l" + errors[0].lastLine + " " + errors[0].message); 
-					// vscode.window.showInformationMessage(response.data.messages[0].subType + " : " + response.data.messages[0].type);
-				} else {
-					vscode.window.showInformationMessage('No errors found');
-				}
+			if (response.data) {//Check if response is not empty
+				if (response.data.messages.length > 0)//Check if reponse contain "HTML errors" found by W3C Validator
+					handleW3CErrors(collection, response.data.messages);
+				else
+					vscode.window.showInformationMessage('This HTML document is valid.');
 			} else {
 				vscode.window.showErrorMessage('200, No data');
 			}
@@ -62,13 +63,79 @@ function activate(context) {
 	});
 
 	context.subscriptions.push(disposable);
+
+	console.log("Extension activated");
 }
 
 // @ts-ignore
 exports.activate = activate;
 
+/**
+ * 
+ * @param collection diagnostics collection 
+ * @param messages retrived messages from the W3C request 
+ */
+function handleW3CErrors(collection,messages){
+	//Asking if user want to see the erros in code
+	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`, 'Show errors')
+	.then(selection => {
+		if(selection == 'Show errors'){
+
+			const diagnostics = [];
+			//Create a diagnostic for each message
+			messages.forEach(element => {
+				diagnostics.push(getDiagnostic(element));
+			});
+
+			//Adding all diagnostics to page
+			collection.set(
+				vscode.window.activeTextEditor.document.uri,
+				diagnostics
+			);
+		}
+	});
+}
+
+/**
+ * Create a diagnostic to be shown from one message collected by the W3C request
+ * @param  data on message of the request
+ * @return diagnostic object
+ */
+function getDiagnostic(data) {
+	console.log(data);
+	
+	let startPosition = new vscode.Position(data.lastLine - 1,data.hiliteStart - 1);
+	let stopPosition = new vscode.Position(data.lastLine -1 ,data.hiliteStart - 1 + data.hiliteLength);
+	let range = new vscode.Range(startPosition,stopPosition);
+
+	const diagnostic = new vscode.Diagnostic(
+		range, 
+		data.message,
+		vscode.DiagnosticSeverity.Error
+	);
+	diagnostic.code = 'web_validation';
+	return diagnostic;
+}
+
+
+/**
+ * This method is called when the extension is activated (from activate())
+ * It create a statusBarItem in vscode window
+ * @param {vscode.ExtensionContext} context
+ */
+function createStatusBarItem(context) {
+	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left,0);
+	
+	statusBarItem.command = 'webvalidator.startvalidation';
+	statusBarItem.text = 'Web validation';
+	statusBarItem.show();
+	context.subscriptions.push(statusBarItem);
+
+	console.log("Status bar item created");
+}
+
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() {	console.log("Extension deactivated"); }
 
 module.exports = {
 	// @ts-ignore
