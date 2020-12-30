@@ -4,10 +4,10 @@
 
 ## Stay up to standard all the time.
 ### Start the validation
-![](images/command-button.png)
+>![](images/command-button.png)
 ### Detect errors
-![](images/popup.png)
+>![](images/popup.png)
 ### Correct your errors
-![](images/diagnostic.png)
+>![](images/diagnostic.png)
 
 > Author : Riboulet Célian
