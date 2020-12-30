@@ -3,6 +3,8 @@
 const vscode = require('vscode');
 const axios = require('axios').default;
 
+const diagnosticsCollection = vscode.languages.createDiagnosticCollection('webcollection');
+
 /**
  * This method is called when your extension is activated
  * The extension is activated the very first time the command is executed
@@ -12,12 +14,15 @@ function activate(context) {
 
 	createStatusBarItem();
 
-	const collection = vscode.languages.createDiagnosticCollection('webcollection');
-	
+	let clearCmd = vscode.commands.registerCommand('webvalidator.clearvalidation', function () {
+		diagnosticsCollection.clear();
+		vscode.window.showWarningMessage('Errors cleared.');
+	});
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('webvalidator.startvalidation', function () {
+	let validationCmd = vscode.commands.registerCommand('webvalidator.startvalidation', function () {
 		// This code will be executed every time the command is executed
 
 		if(!vscode.window.activeTextEditor){
@@ -33,7 +38,7 @@ function activate(context) {
 			return;
 		}
 
-		collection.clear();
+		diagnosticsCollection.clear();
 
 		vscode.window.showInformationMessage('Validation starting on this HTML file...');
 
@@ -51,7 +56,7 @@ function activate(context) {
 		.then(function (response) {
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0)//Check if reponse contain "HTML errors" found by W3C Validator
-					handleW3CErrors(collection, response.data.messages);
+					handleW3CErrors(diagnosticsCollection, response.data.messages);
 				else
 					vscode.window.showInformationMessage('This HTML document is valid.');
 			} else {
@@ -65,7 +70,8 @@ function activate(context) {
 
 	});
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(clearCmd);
+	context.subscriptions.push(validationCmd);
 
 	console.log("Extension activated");
 }

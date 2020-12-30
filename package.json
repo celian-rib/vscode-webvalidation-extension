@@ -31,7 +31,8 @@
     },
 	"activationEvents": [
 		"onStartupFinished",
-		"onCommand:webvalidator.startvalidation"
+		"onCommand:webvalidator.startvalidation",
+		"onCommand:webvalidator.clearvalidation"
 	],
 	"main": "./extension.js",
 	"contributes": {
@@ -39,6 +40,10 @@
 			{
 				"command": "webvalidator.startvalidation",
 				"title": "Start Web validation"
+			},
+			{
+				"command": "webvalidator.clearvalidation",
+				"title": "Clear Web validation errors"
 			}
 		]
 	},
