@@ -1,8 +1,8 @@
 # Web Validator
 
-Web validator let you check the validity of any HTML file with the W3C Validator API.
+>>> Web validator let you check the validity of any HTML file with the W3C Validator API.
 
-## Easy to use
+## Stay up to standard all the time.
 ### Start the validation
 ![](images/command-button.png)
 ### Detect errors
