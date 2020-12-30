@@ -39,11 +39,11 @@
 		"commands": [
 			{
 				"command": "webvalidator.startvalidation",
-				"title": "Start Web validation"
+				"title": "Start Web validation on this file"
 			},
 			{
 				"command": "webvalidator.clearvalidation",
-				"title": "Clear Web validation errors"
+				"title": "Clear Web validation issues on file"
 			}
 		]
 	},

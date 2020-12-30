@@ -16,7 +16,7 @@ function activate(context) {
 
 	let clearCmd = vscode.commands.registerCommand('webvalidator.clearvalidation', function () {
 		diagnosticsCollection.clear();
-		vscode.window.showWarningMessage('Errors cleared.');
+		vscode.window.showWarningMessage('Issues cleared.');
 	});
 
 	// The command has been defined in the package.json file
@@ -86,9 +86,9 @@ exports.activate = activate;
  */
 function handleW3CErrors(collection,messages){
 	//Asking if user want to see the erros in code
-	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`, 'Show errors')
+	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`, 'Show issues')
 	.then(selection => {
-		if(selection == 'Show errors'){
+		if(selection == 'Show issues'){
 
 			const diagnostics = [];
 			//Create a diagnostic for each message
@@ -103,7 +103,7 @@ function handleW3CErrors(collection,messages){
 			);
 
 			//Ask to clear diagnostic
-			vscode.window.showInformationMessage(`${messages.length} errors are displayed.`, 'Clear')
+			vscode.window.showInformationMessage(`${messages.length} issues are displayed.`, 'Clear')
 			.then(selection => {
 				if(selection == 'Clear'){
 					collection.clear();
@@ -125,10 +125,20 @@ function getDiagnostic(data) {
 	let stopPosition = new vscode.Position(data.lastLine -1 ,data.hiliteStart - 1 + data.hiliteLength);
 	let range = new vscode.Range(startPosition,stopPosition);
 
+	let severity = vscode.DiagnosticSeverity.Information;
+	switch (data.type) {
+		case 'error':
+			severity = vscode.DiagnosticSeverity.Error
+			break;
+		case 'info':
+			severity = vscode.DiagnosticSeverity.Warning
+			break;
+	}
+
 	const diagnostic = new vscode.Diagnostic(
 		range, 
 		data.message,
-		vscode.DiagnosticSeverity.Error
+		severity
 	);
 	diagnostic.code = 'web_validation';
 	return diagnostic;
