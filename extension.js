@@ -3,7 +3,6 @@
 const vscode = require('vscode');
 const axios = require('axios').default;
 
-
 /**
  * This method is called when your extension is activated
  * The extension is activated the very first time the command is executed
@@ -11,7 +10,7 @@ const axios = require('axios').default;
  */
 function activate(context) {
 
-	createStatusBarItem(context);
+	createStatusBarItem();
 
 	const collection = vscode.languages.createDiagnosticCollection('webcollection');
 	
@@ -22,7 +21,11 @@ function activate(context) {
 		// This code will be executed every time the command is executed
 
 		if(!vscode.window.activeTextEditor){
-			vscode.window.showWarningMessage('Open an HTML file first');
+			vscode.window.showWarningMessage('Open an HTML file first.');
+			return;
+		}
+		if(vscode.window.activeTextEditor.document.languageId == "css"){
+			vscode.window.showWarningMessage('CSS files are not supported yet.');
 			return;
 		}
 		if(vscode.window.activeTextEditor.document.languageId != "html"){
@@ -52,7 +55,7 @@ function activate(context) {
 				else
 					vscode.window.showInformationMessage('This HTML document is valid.');
 			} else {
-				vscode.window.showErrorMessage('200, No data');
+				vscode.window.showErrorMessage('200, No data.');
 			}
 		})
 		.catch(function (error) {
@@ -94,7 +97,7 @@ function handleW3CErrors(collection,messages){
 			);
 
 			//Ask to clear diagnostic
-			vscode.window.showInformationMessage(`${messages.length} errors are displayed`, 'Clear')
+			vscode.window.showInformationMessage(`${messages.length} errors are displayed.`, 'Clear')
 			.then(selection => {
 				if(selection == 'Clear'){
 					collection.clear();
@@ -129,18 +132,17 @@ function getDiagnostic(data) {
 /**
  * This method is called when the extension is activated (from activate())
  * It create a statusBarItem in vscode window
- * @param {vscode.ExtensionContext} context
  */
-function createStatusBarItem(context) {
+function createStatusBarItem() {
 	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left,0);
 	
 	statusBarItem.command = 'webvalidator.startvalidation';
 	statusBarItem.text = `$(rocket) Web Validator`;
 	statusBarItem.tooltip = 'Check if this HTML document is up to standard with the W3C Validator API';
 	statusBarItem.show();
-	context.subscriptions.push(statusBarItem);
 
 	console.log("Status bar item created");
+	return statusBarItem;
 }
 
 // this method is called when your extension is deactivated

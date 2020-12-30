@@ -4,10 +4,10 @@
 
 ## Stay up to standard all the time.
 ### Start the validation
-![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/command-button.png)
+![](images/command-button.png)
 ### Detect errors
-![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/popup.png)
-### Correct
-![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic.png)
+![](images/popup.png)
+### Correct your errors
+![](images/diagnostic.png)
 
 > Author : Riboulet Célian
