@@ -11,4 +11,3 @@
 ![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic.png)
 
 > Author : Riboulet Célian
-> Check repository : https://github.com/celian-rib/vscode-webvalidation-extension
