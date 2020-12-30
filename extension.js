@@ -92,6 +92,14 @@ function handleW3CErrors(collection,messages){
 				vscode.window.activeTextEditor.document.uri,
 				diagnostics
 			);
+
+			//Ask to clear diagnostic
+			vscode.window.showInformationMessage(`${messages.length} errors are displayed`, 'Clear')
+			.then(selection => {
+				if(selection == 'Clear'){
+					collection.clear();
+				}
+			});
 		}
 	});
 }
@@ -127,7 +135,8 @@ function createStatusBarItem(context) {
 	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left,0);
 	
 	statusBarItem.command = 'webvalidator.startvalidation';
-	statusBarItem.text = 'Web validation';
+	statusBarItem.text = `$(rocket) Web Validator`;
+	statusBarItem.tooltip = 'Check if this HTML document is up to standard with the W3C Validator API';
 	statusBarItem.show();
 	context.subscriptions.push(statusBarItem);
 
