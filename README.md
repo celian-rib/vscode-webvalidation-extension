@@ -2,7 +2,7 @@
 
 ## Stay up to standard !
 
-> Web validator let you check the validity of any HTML file with the W3C Validator API.
+Web validator let you check the validity of any HTML file with the W3C Validator API.
 
 ***
 
@@ -12,13 +12,13 @@ Press the extension button and the validation will start right away.
 
 ***
 
-### Check if any errors are detected !
+### Check if an issue is detected !
 If errors are detected you'll be able to see them directly in your HTML file.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/popup.png?raw=true)
 
 ***
 
-### Correct !
+### Correct your issues !
 All errors have a diagnostic that will help you to correct them.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic.png?raw=true)
 
