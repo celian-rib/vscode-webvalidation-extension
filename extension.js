@@ -5,6 +5,8 @@ const axios = require('axios').default;
 
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('webcollection');
 
+let issueDiagnostics = [];
+
 /**
  * This method is called when your extension is activated
  * The extension is activated the very first time the command is executed
@@ -15,9 +17,15 @@ function activate(context) {
 	createStatusBarItem();
 
 	let clearCmd = vscode.commands.registerCommand('webvalidator.clearvalidation', function () {
-		diagnosticsCollection.clear();
-		vscode.window.showWarningMessage('Issues cleared.');
+		clearDiagnostics();
 	});
+
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeTextDocument(() => {
+			refreshDiagnostic();
+		})
+	);
+
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -56,7 +64,7 @@ function activate(context) {
 		.then(function (response) {
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0)//Check if reponse contain "HTML errors" found by W3C Validator
-					handleW3CErrors(diagnosticsCollection, response.data.messages);
+					createIssueDiagnostics(response.data.messages);
 				else
 					vscode.window.showInformationMessage('This HTML document is valid.');
 			} else {
@@ -64,7 +72,7 @@ function activate(context) {
 			}
 		})
 		.catch(function (error) {
-			console.log(error);
+			console.error(error);
 			vscode.window.showErrorMessage('An error occured.');
 		});
 
@@ -79,38 +87,81 @@ function activate(context) {
 // @ts-ignore
 exports.activate = activate;
 
+class IssueDiagnostic {
+	constructor (diagnostic,lineRange, lineIntialContent) {
+		this.diagnostic = diagnostic;
+		this.lineRange = lineRange;
+		this.lineIntialContent = lineIntialContent;
+	}
+}
+
+function refreshDiagnostic(){
+	try {
+		const diagnostics = [];
+	
+		issueDiagnostics.forEach(element => {
+			const currentLineContent = vscode.window.activeTextEditor.document.getText(element.lineRange);
+			if(element.lineIntialContent !== currentLineContent){
+				issueDiagnostics.splice(issueDiagnostics.indexOf(element),1);
+				console.log("1 issue auto cleared")
+			}else{
+				diagnostics.push(element.diagnostic);
+			}
+		});
+	
+		//Adding all diagnostics to page
+		diagnosticsCollection.set(
+			vscode.window.activeTextEditor.document.uri,
+			diagnostics
+		);
+	}
+	catch (e) {
+		console.error(e);
+	}
+}
+
+function clearDiagnostics() {
+	console.log("Diagnostic cleared");
+	issueDiagnostics = [];
+	diagnosticsCollection.clear();
+	vscode.window.showWarningMessage('Issues cleared.');
+}
+
 /**
  * 
- * @param collection diagnostics collection 
  * @param messages retrived messages from the W3C request 
  */
-function handleW3CErrors(collection,messages){
-	//Asking if user want to see the erros in code
-	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`, 'Show issues')
-	.then(selection => {
-		if(selection == 'Show issues'){
+function createIssueDiagnostics(messages){
 
-			const diagnostics = [];
-			//Create a diagnostic for each message
-			messages.forEach(element => {
-				diagnostics.push(getDiagnostic(element));
-			});
-
-			//Adding all diagnostics to page
-			collection.set(
-				vscode.window.activeTextEditor.document.uri,
-				diagnostics
-			);
-
-			//Ask to clear diagnostic
-			vscode.window.showInformationMessage(`${messages.length} issues are displayed.`, 'Clear')
-			.then(selection => {
-				if(selection == 'Clear'){
-					collection.clear();
-				}
-			});
-		}
+	messages.forEach(element => {
+		issueDiagnostics.push(getIssueDiagnostic(element));
 	});
+	
+	refreshDiagnostic();
+
+	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`,'Clear')
+	.then(selection => {
+		if(selection == 'Clear')
+			clearDiagnostics();
+	});
+}
+
+function getIssueDiagnostic(data) {
+	return new IssueDiagnostic(
+		getDiagnostic(data),
+		getLineRange(data),
+		vscode.window.activeTextEditor.document.getText(getLineRange(data))
+	);
+}
+
+function getLineRange(data) {
+	return vscode.window.activeTextEditor.document.lineAt(data.lastLine-1).range;
+}
+
+function getRange(data) {
+	let startPosition = new vscode.Position(data.lastLine - 1,data.hiliteStart - 1);
+	let stopPosition = new vscode.Position(data.lastLine -1 ,data.hiliteStart - 1 + data.hiliteLength);
+	return new vscode.Range(startPosition,stopPosition);
 }
 
 /**
@@ -119,12 +170,6 @@ function handleW3CErrors(collection,messages){
  * @return diagnostic object
  */
 function getDiagnostic(data) {
-	console.log(data);
-	
-	let startPosition = new vscode.Position(data.lastLine - 1,data.hiliteStart - 1);
-	let stopPosition = new vscode.Position(data.lastLine -1 ,data.hiliteStart - 1 + data.hiliteLength);
-	let range = new vscode.Range(startPosition,stopPosition);
-
 	let severity = vscode.DiagnosticSeverity.Information;
 	switch (data.type) {
 		case 'error':
@@ -136,11 +181,12 @@ function getDiagnostic(data) {
 	}
 
 	const diagnostic = new vscode.Diagnostic(
-		range, 
+		getRange(data), 
 		data.message,
 		severity
 	);
-	diagnostic.code = 'web_validation';
+	diagnostic.code = 'web_validator';
+
 	return diagnostic;
 }
 
