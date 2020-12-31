@@ -34,7 +34,7 @@
 		"onCommand:webvalidator.startvalidation",
 		"onCommand:webvalidator.clearvalidation"
 	],
-	"main": "./extension.js",
+	"main": "./src/extension.js",
 	"contributes": {
 		"commands": [
 			{
