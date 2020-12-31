@@ -97,6 +97,7 @@ class IssueDiagnostic {
 
 function refreshDiagnostic(){
 	try {
+		diagnosticsCollection.clear();
 		const diagnostics = [];
 	
 		issueDiagnostics.forEach(element => {
@@ -120,11 +121,23 @@ function refreshDiagnostic(){
 	}
 }
 
-function clearDiagnostics() {
-	console.log("Diagnostic cleared");
-	issueDiagnostics = [];
-	diagnosticsCollection.clear();
-	vscode.window.showWarningMessage('Issues cleared.');
+function clearDiagnostics(onlyWarning=false,verbose=true) {
+	if(onlyWarning){
+		issueDiagnostics.forEach(element => {
+			if(element.diagnostic.severity == vscode.DiagnosticSeverity.Warning){
+				issueDiagnostics.splice(issueDiagnostics.indexOf(element),1);
+				if(verbose)	vscode.window.showWarningMessage('Warnings cleared.');
+			}
+		})
+		refreshDiagnostic();
+		console.log("Warn cleared");
+	}else{
+		issueDiagnostics = [];
+		diagnosticsCollection.clear();
+		if(verbose)	vscode.window.showWarningMessage('All errors and warnings cleared.');
+		console.log("All cleared");
+	}
+
 }
 
 /**
@@ -132,17 +145,29 @@ function clearDiagnostics() {
  * @param messages retrived messages from the W3C request 
  */
 function createIssueDiagnostics(messages){
+	clearDiagnostics(false,false);
+	let errorCount = 0;
+	let warningCount = 0;
 
 	messages.forEach(element => {
+		if(element.type === 'error')
+			errorCount++;
+		else 
+			warningCount++;
+
 		issueDiagnostics.push(getIssueDiagnostic(element));
 	});
 	
 	refreshDiagnostic();
-
-	vscode.window.showErrorMessage(`This HTML document is not valid. (${messages.length} errors)`,'Clear')
+	
+	vscode.window.showErrorMessage(
+		`This HTML document is not valid. (${errorCount} errors , ${warningCount} warnings)`,'Clear all','Clear warnings'
+	)
 	.then(selection => {
-		if(selection == 'Clear')
+		if(selection == 'Clear all')
 			clearDiagnostics();
+		else if(selection == 'Clear warnings')
+			clearDiagnostics(true);
 	});
 }
 
@@ -186,6 +211,7 @@ function getDiagnostic(data) {
 		severity
 	);
 	diagnostic.code = 'web_validator';
+	diagnostic.source = data.type;
 
 	return diagnostic;
 }
