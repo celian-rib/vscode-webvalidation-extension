@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.5]
+
+- Auto clear issues when the corresponding line is edited
+
 ## [1.0.4]
 
 - Clear command added
