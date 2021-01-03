@@ -3,71 +3,77 @@
 const vscode = require('vscode');
 const axios = require('axios').default;
 
-const diagnosticsCollection = vscode.languages.createDiagnosticCollection('webcollection');
-let issueDiagnosticsList = [];
+const DIAGNOTIC_COLLECTION = vscode.languages.createDiagnosticCollection('webcollection');
+let ISSUE_DIAGNOSTIC_LIST = [];
 
-let statusBarItem;
+let STATUS_BAR_ITEM;
+let STATUS_BAR_ITEM_CLEAR_BTN;
+
+const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
 /**
  * This is the main method of the extension, it make a request to the W3C API and
  * analyse the response.
  */
-function startValidation() {
+const startValidation = () => {
 
 	//Check if file is valid 
-	//Only suport HTML files for the moment
+	//Only suport HTML and CSS files for the moment
 	if (!activeFileIsValid())
 		return;
 
 	//Current diagnostics are cleared, everything is reseted.
-	clearDiagnosticsListAndUpdateWindow();
+	clearDiagnosticsListAndUpdateWindow(false,false);
 
-	vscode.window.showInformationMessage('Validation starting on this HTML file...');
+	const fileLanguageID = vscode.window.activeTextEditor.document.languageId
 
 	//All the file content as raw text, this will be send as the request body
 	const filecontent = vscode.window.activeTextEditor.document.getText();
-
+	vscode.window.showInformationMessage(
+		`Validation starting on this ${fileLanguageID.toUpperCase()} file...`
+	);
+	
+	updateStatusBarItem("$(rocket) Loading ...");
+	
 	//Request header
-	const headers = { 'Content-type': 'text/html; charset=utf-8' }
-
-	createStatusBarItem("$(rocket) Loading ...");
+	const headers = { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` }
 
 	//Starting axios request on the W3C API, post request with raw file content
-	axios.post('https://validator.w3.org/nu/?out=json', filecontent, {
+	axios.post(W3C_API_URL, filecontent, {
 		headers: headers,
 	})
-		.then(function (response) {
-			if (response.data) {//Check if response is not empty
-				if (response.data.messages.length > 0)//Check if reponse contain "HTML errors" found by W3C Validator
-					createIssueDiagnosticsList(response.data.messages);
-				else
-					vscode.window.showInformationMessage('This HTML document is valid.');
-			} else {
-				vscode.window.showErrorMessage('200, No data.');
-			}
-		})
-		.catch(function (error) {
-			console.error(error);
-			vscode.window.showErrorMessage('An error occured. (Check your internet connection');
-		});
-
-	createStatusBarItem();
+	.then((response) => {
+		if (response.data) {//Check if response is not empty
+			if (response.data.messages.length > 0){//Check if reponse contain errors and warnings found by W3C Validator
+				createIssueDiagnosticsList(response.data.messages, fileLanguageID);
+				updateStatusBarItemClearButton();
+			}else{
+				vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+			} 
+		} else {
+			vscode.window.showErrorMessage('200, No data.');
+		}
+	})
+	.catch((error) => {
+		console.error(error);
+		vscode.window.showErrorMessage('An error occured.');
+	})
+	.finally(() => {
+		updateStatusBarItem();
+	});
 }
 
 /**
  * @return true if the active text editor is a compatible file with the validation.
  */
-function activeFileIsValid() {
+const activeFileIsValid = () => {
 	if (!vscode.window.activeTextEditor) {
-		vscode.window.showWarningMessage('Open an HTML file first.');
+		vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
 		return false;
 	}
-	if (vscode.window.activeTextEditor.document.languageId == "css") {
-		vscode.window.showWarningMessage('CSS files are not supported yet.');
-		return false;
-	}
-	if (vscode.window.activeTextEditor.document.languageId != "html") {
-		vscode.window.showWarningMessage('Not an HTML file.');
+	const languageID = vscode.window.activeTextEditor.document.languageId;
+	if (languageID != "html" && languageID != "css") {
+		vscode.window.showWarningMessage('Not an HTML or CSS file.');
 		return false;
 	}
 	return true;
@@ -92,7 +98,7 @@ class IssueDiagnostic {
  * the response of the post request to the W3C API
  * @param requestReponse the response from the W3C API
  */
-function createIssueDiagnosticsList(requestReponse) {
+const createIssueDiagnosticsList = (requestReponse, fileLanguageID) => {
 	//The list (global variable issueDiagnosticList) is cleared before all.
 	//The goal here is to create or recreate the content of the list.
 	clearDiagnosticsListAndUpdateWindow(false, false);
@@ -108,7 +114,7 @@ function createIssueDiagnosticsList(requestReponse) {
 		else
 			warningCount++;
 
-		issueDiagnosticsList.push(new IssueDiagnostic(element));
+		ISSUE_DIAGNOSTIC_LIST.push(new IssueDiagnostic(element));
 	});
 
 	//We now refresh the diagnostics on the current text editor with
@@ -116,7 +122,7 @@ function createIssueDiagnosticsList(requestReponse) {
 	refreshWindowDiagnostics();
 
 	vscode.window.showErrorMessage(
-		`This HTML document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 'Clear all', 'Clear warnings'
+		`This ${fileLanguageID.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 'Clear all', warningCount > 0 && 'Clear warnings'
 	)
 		.then(selection => {//Ask the user if diagnostics have to be cleared from window
 			if (selection == 'Clear all')
@@ -131,21 +137,21 @@ function createIssueDiagnosticsList(requestReponse) {
  * the issueDiagnosticList array.
  * This is called on every changes in the active text editor.
  */
-function refreshWindowDiagnostics() {
+const refreshWindowDiagnostics = () => {
 	try {
 		//Clearing window's diagnostic
-		diagnosticsCollection.clear();
+		DIAGNOTIC_COLLECTION.clear();
 		const diagnostics = [];
 
 		//Auto clear diagnostic on page :
 		//For each registered diagnostic in the issueDiagnostic list
-		issueDiagnosticsList.forEach(element => {
+		ISSUE_DIAGNOSTIC_LIST.forEach(element => {
 
 			//We first check if the line of this diagnostic has changed
 			//So we compare the initial content of the diagnostic's line with the actual content.
 			const currentLineContent = vscode.window.activeTextEditor.document.getText(element.lineRange);
 			if (element.lineIntialContent !== currentLineContent) {
-				issueDiagnosticsList.splice(issueDiagnosticsList.indexOf(element), 1);
+				ISSUE_DIAGNOSTIC_LIST.splice(ISSUE_DIAGNOSTIC_LIST.indexOf(element), 1);
 				console.log("1 issue auto cleared")
 			} else {
 				//In case the line has no changes, that means we should keep this diagnostic on page.
@@ -154,10 +160,13 @@ function refreshWindowDiagnostics() {
 		});
 
 		//Adding all remaining diagnostics to page.
-		diagnosticsCollection.set(
+		DIAGNOTIC_COLLECTION.set(
 			vscode.window.activeTextEditor.document.uri,
 			diagnostics
 		);
+
+		if(diagnostics.length == 0)
+			updateStatusBarItemClearButton(true);
 	}
 	catch (e) {
 		console.error(e);
@@ -171,21 +180,22 @@ function refreshWindowDiagnostics() {
  */
 const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true) => {
 	if (onlyWarning) {
-		issueDiagnosticsList.forEach(element => {
+		ISSUE_DIAGNOSTIC_LIST.forEach(element => {
 			if (element.diagnostic.severity == vscode.DiagnosticSeverity.Warning) {
-				issueDiagnosticsList.splice(issueDiagnosticsList.indexOf(element), 1);
+				ISSUE_DIAGNOSTIC_LIST.splice(ISSUE_DIAGNOSTIC_LIST.indexOf(element), 1);
 				if (verbose) vscode.window.showWarningMessage('Warnings cleared.');
 			}
 		})
 		refreshWindowDiagnostics();
 		console.log("Warn cleared");
 	} else {
-		issueDiagnosticsList = [];
-		diagnosticsCollection.clear();
+		ISSUE_DIAGNOSTIC_LIST = [];
+		DIAGNOTIC_COLLECTION.clear();
 		if (verbose) vscode.window.showWarningMessage('All errors and warnings cleared.');
 		console.log("All cleared");
 	}
 
+	updateStatusBarItemClearButton(true);
 }
 
 /**
@@ -193,7 +203,7 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true
  * @param  data on message of the request
  * @return diagnostic object
  */
-function getDiagnostic(data) {
+const getDiagnostic = (data) => {
 	let severity = vscode.DiagnosticSeverity.Information;
 	switch (data.type) {
 		case 'error':
@@ -219,7 +229,7 @@ function getDiagnostic(data) {
  * @param data One error message from the request
  * @return the corresponding Range of the whole line of the given message from the request (data)
  */
-function getLineRange(data) {
+const getLineRange = (data) => {
 	return vscode.window.activeTextEditor.document.lineAt(data.lastLine - 1).range;
 }
 
@@ -227,7 +237,7 @@ function getLineRange(data) {
  * @param data One error message from the request
  * @return the corresponding Range of the given message from the request (data)
  */
-function getRange(data) {
+const getRange = (data) => {
 	let startPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1);
 	let stopPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1 + data.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
@@ -238,14 +248,36 @@ function getRange(data) {
  * This method is called when the extension is activated (from activate())
  * It create a statusBarItem in vscode bottom bar
  */
-function createStatusBarItem(customText = null) {
-	if (statusBarItem == null)
-		statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-	statusBarItem.command = 'webvalidator.startvalidation';
-	statusBarItem.text = customText == null ? `$(rocket) Web Validator` : customText;
-	statusBarItem.tooltip = 'Check if this HTML document is up to standard with the W3C Validator API';
-	statusBarItem.show();
-	console.log("Status bar item created");
+const updateStatusBarItem = (customText = null) => {
+	if (STATUS_BAR_ITEM == null){
+		console.log("Status bar item created");
+		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
+	}
+	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
+	STATUS_BAR_ITEM.text = customText == null ? `$(rocket) Web Validator` : customText;
+	STATUS_BAR_ITEM.tooltip = 'Check if this  or CSS document is up to standard with the W3C Validator API';
+	STATUS_BAR_ITEM.show();
+	console.log("Status bar item updated");
+}
+
+/**
+ * This method create or hide the clear button in status bar
+ * @param hide 
+ */
+const updateStatusBarItemClearButton = (hide = false) => {
+	if(STATUS_BAR_ITEM_CLEAR_BTN == null){
+		STATUS_BAR_ITEM_CLEAR_BTN = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
+		console.log("Clear button created");
+	}
+	STATUS_BAR_ITEM_CLEAR_BTN.command = 'webvalidator.clearvalidation';
+	STATUS_BAR_ITEM_CLEAR_BTN.text = `$(notifications-clear) Clear web validation`;
+	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the web validator extension';
+	if(hide) {
+		STATUS_BAR_ITEM_CLEAR_BTN.hide();	
+	}else{
+		STATUS_BAR_ITEM_CLEAR_BTN.show();
+	}
+	console.log("Clear button updated");
 }
 
 /**
@@ -256,16 +288,16 @@ function createStatusBarItem(customText = null) {
  * as "start validation" or "clear diagnostic"
  * @param {vscode.ExtensionContext} context
  */
-function activate(context) {
+const activate = (context) => {
 
 	//Creating the button in status bar on launch
-	createStatusBarItem();
+	updateStatusBarItem();
 
 	// The commands are defined in the package.json file
 
 	//Clear command
 	context.subscriptions.push(
-		vscode.commands.registerCommand('webvalidator.clearvalidation', function () {
+		vscode.commands.registerCommand('webvalidator.clearvalidation',() => {
 			clearDiagnosticsListAndUpdateWindow();
 		})
 	);
@@ -279,7 +311,7 @@ function activate(context) {
 
 	//Start validation command
 	context.subscriptions.push(
-		vscode.commands.registerCommand('webvalidator.startvalidation', function () {
+		vscode.commands.registerCommand('webvalidator.startvalidation',() => {
 			startValidation();
 		})
 	);
@@ -294,7 +326,7 @@ exports.activate = activate;
 /**
  * Method called when the extension id deactivated
  */
-function deactivate() { console.log("Web validator extension disabled"); }
+const deactivate = () => { console.log("Web validator extension disabled"); }
 
 module.exports = {
 	// @ts-ignore

@@ -3,32 +3,32 @@
 	"displayName": "Web Validator",
 	"description": "Check the validity of an HTML file with the W3C Validator API",
 	"publisher": "CelianRiboulet",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"icon": "images/web-validator-icon.png",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
 	"repository": {
-        "type": "git",
-        "url": "https://github.com/celian-rib/vscode-webvalidation-extension"
-    },
+		"type": "git",
+		"url": "https://github.com/celian-rib/vscode-webvalidation-extension"
+	},
 	"categories": [
 		"Other"
 	],
 	"keywords": [
-        "validator",
-        "W3C",
-        "HTML",
-        "html",
-        "validation",
+		"validator",
+		"W3C",
+		"HTML",
+		"html",
+		"validation",
 		"standard",
 		"web validator",
 		"web"
 	],
 	"galleryBanner": {
-        "color": "#232323",
-        "theme": "dark"
-    },
+		"color": "#232323",
+		"theme": "dark"
+	},
 	"activationEvents": [
 		"onStartupFinished",
 		"onCommand:webvalidator.startvalidation",

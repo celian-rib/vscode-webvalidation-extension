@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.0.7]
+
+- CSS support added
+- Clear button in status bar
+
+## [1.0.6]
+
+- Clear only warnings buttin in result message
+
 ## [1.0.5]
 
 - Auto clear issues when the corresponding line is edited
