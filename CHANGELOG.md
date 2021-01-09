@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.0.8]
+
+- Warnings clear fix
+
 ## [1.0.7]
 
 - CSS support added
