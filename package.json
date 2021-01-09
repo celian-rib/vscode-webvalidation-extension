@@ -6,7 +6,7 @@
 	"version": "1.0.8",
 	"icon": "images/web-validator-icon.png",
 	"engines": {
-		"vscode": "^1.44.0"
+		"vscode": "^1.52.0"
 	},
 	"repository": {
 		"type": "git",
