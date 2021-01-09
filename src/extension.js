@@ -23,7 +23,7 @@ const startValidation = () => {
 		return;
 
 	//Current diagnostics are cleared, everything is reseted.
-	clearDiagnosticsListAndUpdateWindow(false,false);
+	clearDiagnosticsListAndUpdateWindow(false, false);
 
 	const fileLanguageID = vscode.window.activeTextEditor.document.languageId
 
@@ -32,9 +32,9 @@ const startValidation = () => {
 	vscode.window.showInformationMessage(
 		`Validation starting on this ${fileLanguageID.toUpperCase()} file...`
 	);
-	
-	updateStatusBarItem("$(rocket) Loading ...");
-	
+
+	updateStatusBarItem("$(settings-sync-view-icon~spin) Loading ...");
+
 	//Request header
 	const headers = { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` }
 
@@ -42,25 +42,25 @@ const startValidation = () => {
 	axios.post(W3C_API_URL, filecontent, {
 		headers: headers,
 	})
-	.then((response) => {
-		if (response.data) {//Check if response is not empty
-			if (response.data.messages.length > 0){//Check if reponse contain errors and warnings found by W3C Validator
-				createIssueDiagnosticsList(response.data.messages, fileLanguageID);
-				updateStatusBarItemClearButton();
-			}else{
-				vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
-			} 
-		} else {
-			vscode.window.showErrorMessage('200, No data.');
-		}
-	})
-	.catch((error) => {
-		console.error(error);
-		vscode.window.showErrorMessage('An error occured.');
-	})
-	.finally(() => {
-		updateStatusBarItem();
-	});
+		.then((response) => {
+			if (response.data) {//Check if response is not empty
+				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
+					createIssueDiagnosticsList(response.data.messages, fileLanguageID);
+					updateStatusBarItemClearButton();
+				} else {
+					vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+				}
+			} else {
+				vscode.window.showErrorMessage('200, No data.');
+			}
+		})
+		.catch((error) => {
+			console.error(error);
+			vscode.window.showErrorMessage('An error occured.');
+		})
+		.finally(() => {
+			updateStatusBarItem();
+		});
 }
 
 /**
@@ -146,7 +146,6 @@ const refreshWindowDiagnostics = () => {
 		//Auto clear diagnostic on page :
 		//For each registered diagnostic in the issueDiagnostic list
 		ISSUE_DIAGNOSTIC_LIST.forEach(element => {
-
 			//We first check if the line of this diagnostic has changed
 			//So we compare the initial content of the diagnostic's line with the actual content.
 			const currentLineContent = vscode.window.activeTextEditor.document.getText(element.lineRange);
@@ -165,7 +164,7 @@ const refreshWindowDiagnostics = () => {
 			diagnostics
 		);
 
-		if(diagnostics.length == 0)
+		if (diagnostics.length == 0)
 			updateStatusBarItemClearButton(true);
 	}
 	catch (e) {
@@ -180,14 +179,18 @@ const refreshWindowDiagnostics = () => {
  */
 const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true) => {
 	if (onlyWarning) {
-		ISSUE_DIAGNOSTIC_LIST.forEach(element => {
-			if (element.diagnostic.severity == vscode.DiagnosticSeverity.Warning) {
-				ISSUE_DIAGNOSTIC_LIST.splice(ISSUE_DIAGNOSTIC_LIST.indexOf(element), 1);
-				if (verbose) vscode.window.showWarningMessage('Warnings cleared.');
-			}
-		})
-		refreshWindowDiagnostics();
+
+		let tempArr = ISSUE_DIAGNOSTIC_LIST;
+		ISSUE_DIAGNOSTIC_LIST = []
+		tempArr.forEach(element => {
+			if(element.diagnostic.severity == vscode.DiagnosticSeverity.Error)
+				ISSUE_DIAGNOSTIC_LIST.push(element);
+		});
+
+		if (verbose) vscode.window.showWarningMessage('Warnings cleared.');
+		
 		console.log("Warn cleared");
+		refreshWindowDiagnostics();
 	} else {
 		ISSUE_DIAGNOSTIC_LIST = [];
 		DIAGNOTIC_COLLECTION.clear();
@@ -249,13 +252,13 @@ const getRange = (data) => {
  * It create a statusBarItem in vscode bottom bar
  */
 const updateStatusBarItem = (customText = null) => {
-	if (STATUS_BAR_ITEM == null){
+	if (STATUS_BAR_ITEM == null) {
 		console.log("Status bar item created");
 		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 	}
 	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
 	STATUS_BAR_ITEM.text = customText == null ? `$(rocket) Web Validator` : customText;
-	STATUS_BAR_ITEM.tooltip = 'Check if this  or CSS document is up to standard with the W3C Validator API';
+	STATUS_BAR_ITEM.tooltip = 'Check if this HTML or CSS document is up to standard with the W3C Validator API';
 	STATUS_BAR_ITEM.show();
 	console.log("Status bar item updated");
 }
@@ -265,16 +268,16 @@ const updateStatusBarItem = (customText = null) => {
  * @param hide 
  */
 const updateStatusBarItemClearButton = (hide = false) => {
-	if(STATUS_BAR_ITEM_CLEAR_BTN == null){
+	if (STATUS_BAR_ITEM_CLEAR_BTN == null) {
 		STATUS_BAR_ITEM_CLEAR_BTN = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 		console.log("Clear button created");
 	}
 	STATUS_BAR_ITEM_CLEAR_BTN.command = 'webvalidator.clearvalidation';
 	STATUS_BAR_ITEM_CLEAR_BTN.text = `$(notifications-clear) Clear web validation`;
 	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the web validator extension';
-	if(hide) {
-		STATUS_BAR_ITEM_CLEAR_BTN.hide();	
-	}else{
+	if (hide) {
+		STATUS_BAR_ITEM_CLEAR_BTN.hide();
+	} else {
 		STATUS_BAR_ITEM_CLEAR_BTN.show();
 	}
 	console.log("Clear button updated");
@@ -297,7 +300,7 @@ const activate = (context) => {
 
 	//Clear command
 	context.subscriptions.push(
-		vscode.commands.registerCommand('webvalidator.clearvalidation',() => {
+		vscode.commands.registerCommand('webvalidator.clearvalidation', () => {
 			clearDiagnosticsListAndUpdateWindow();
 		})
 	);
@@ -311,7 +314,7 @@ const activate = (context) => {
 
 	//Start validation command
 	context.subscriptions.push(
-		vscode.commands.registerCommand('webvalidator.startvalidation',() => {
+		vscode.commands.registerCommand('webvalidator.startvalidation', () => {
 			startValidation();
 		})
 	);
