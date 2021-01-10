@@ -1,7 +1,7 @@
 <p align="center">
  <img width="100px" src="https://raw.githubusercontent.com/celian-rib/vscode-webvalidation-extension/main/images/webvalidator.png" align="center" alt="GitHub Readme Stats" />
  <h2 align="center">VSCode Web Validator</h2>
- <p align="center">Check the validity of your web documents !</p>
+ <p align="center">Check the <a href="https://validator.w3.org/docs/help.html#validation_basics">markup<a/> validity of your web documents !</p>
 </p>
 <p align="center">
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
