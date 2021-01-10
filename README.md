@@ -48,5 +48,5 @@ All errors have a diagnostic that will help you to correct them.
 ***
 
 
-> [Report a bug](https://github.com/celian-rib/vscode-webvalidation-extension/issues)
+> [Report a bug](https://github.com/celian-rib/vscode-webvalidation-extension/issues) <br />
 > Author : Riboulet Célian
