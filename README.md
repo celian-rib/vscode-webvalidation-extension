@@ -10,9 +10,6 @@
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
       <img alt="Trends" src="https://vsmarketplacebadge.apphb.com/trending-monthly/CelianRiboulet.webvalidator.svg" />
     </a>
-    <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
-    </a>
     <br />
     <br />
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
