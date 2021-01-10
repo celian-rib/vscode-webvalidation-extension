@@ -1,5 +1,5 @@
 <p align="center">
- <img width="100px" src="https://res.cloudinary.com/anuraghazra/image/upload/v1594908242/logo_ccswme.svg" align="center" alt="GitHub Readme Stats" />
+ <img width="100px" src="https://raw.githubusercontent.com/celian-rib/vscode-webvalidation-extension/main/images/webvalidator.png" align="center" alt="GitHub Readme Stats" />
  <h2 align="center">VSCode Web Validator</h2>
  <p align="center">Check the validity of your web documents !</p>
 </p>
