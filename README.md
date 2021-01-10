@@ -1,4 +1,26 @@
-# Web Validator
+<p align="center">
+ <img width="100px" src="https://res.cloudinary.com/anuraghazra/image/upload/v1594908242/logo_ccswme.svg" align="center" alt="GitHub Readme Stats" />
+ <h2 align="center">VSCode Web Validator</h2>
+ <p align="center">Check the validity of your web documents !</p>
+</p>
+<p align="center">
+    <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
+      <img alt="Version" src="https://vsmarketplacebadge.apphb.com/version/CelianRiboulet.webvalidator.svg" />
+    </a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
+      <img alt="Trends" src="https://vsmarketplacebadge.apphb.com/trending-monthly/CelianRiboulet.webvalidator.svg" />
+    </a>
+    <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
+      <img alt="Maintenance" src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" />
+    </a>
+    <br />
+    <br />
+    <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
+      <img alt="Downloads" src="https://vsmarketplacebadge.apphb.com/downloads-short/CelianRiboulet.webvalidator.svg" />
+    </a>
+</p>
+
+***
 
 ## Stay up to standard !
 
