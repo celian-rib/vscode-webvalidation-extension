@@ -4,7 +4,7 @@
 	"description": "Check the validity of an HTML file with the W3C Validator API",
 	"publisher": "CelianRiboulet",
 	"version": "1.0.8",
-	"icon": "images/web-validator-icon.png",
+	"icon": "images/webvalidator.png",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
