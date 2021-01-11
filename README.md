@@ -15,11 +15,10 @@
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
       <img alt="Downloads" src="https://vsmarketplacebadge.apphb.com/downloads-short/CelianRiboulet.webvalidator.svg" />
     </a>
+    <h4 align="center">Validity is one of the quality criteria for a Web page</h4>
 </p>
 
 ***
-
-#### Validity is one of the quality criteria for a Web page
 
 ### 1/ Start the validation of your file !
 Press the extension button and the validation will start right away.
