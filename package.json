@@ -1,7 +1,7 @@
 {
 	"name": "webvalidator",
 	"displayName": "Web Validator",
-	"description": "Check the validity of an HTML file with the W3C Validator API",
+	"description": "Check the validity of your HTML and CSS files with the W3C Validator API",
 	"publisher": "CelianRiboulet",
 	"version": "1.0.8",
 	"icon": "images/webvalidator.png",
@@ -19,6 +19,7 @@
 		"validator",
 		"W3C",
 		"HTML",
+		"CSS",
 		"html",
 		"validation",
 		"standard",
