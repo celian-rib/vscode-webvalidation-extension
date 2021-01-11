@@ -19,12 +19,7 @@
 
 ***
 
-## Stay up to standard !
-
-Web validator let you check the syntax of any HTML or CSS file thanks to the W3C Validator API.
 #### Validity is one of the quality criteria for a Web page
-
-***
 
 ### 1/ Start the validation of your file !
 Press the extension button and the validation will start right away.
