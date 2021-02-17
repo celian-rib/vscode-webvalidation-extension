@@ -4,9 +4,13 @@
 /node_modules
 /.pnp
 .pnp.js
+out
+dist
+*.vsix
 
 # testing
 /coverage
+/.vscode-test
 
 # production
 /build
