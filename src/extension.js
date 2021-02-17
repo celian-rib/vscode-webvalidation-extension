@@ -12,6 +12,20 @@ let STATUS_BAR_ITEM_CLEAR_BTN;
 const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
 /**
+ * Class that contain a vscode.diagnostic and its correponding line's range with the 
+ * original content of this same line
+ * - The line content is used for the auto clear feature, as it is compared with the actual content of this same line
+ * @constructor Create an instance with one issue that come from the request of the API
+ */
+class IssueDiagnostic {
+	constructor(data) {
+		this.diagnostic = getDiagnostic(data);
+		this.lineRange = getLineRange(data);
+		this.lineIntialContent = vscode.window.activeTextEditor.document.getText(getLineRange(data));
+	}
+}
+
+/**
  * This is the main method of the extension, it make a request to the W3C API and
  * analyse the response.
  */
@@ -80,21 +94,7 @@ const activeFileIsValid = () => {
 }
 
 /**
- * Class that contain a vscode.diagnostic and its correponding line's range with the 
- * original content of this same line
- * - The line content is used for the auto clear feature, as it is compared with the actual content of this same line
- * @constructor Create an instance with one issue that come from the request of the API
- */
-class IssueDiagnostic {
-	constructor(data) {
-		this.diagnostic = getDiagnostic(data);
-		this.lineRange = getLineRange(data);
-		this.lineIntialContent = vscode.window.activeTextEditor.document.getText(getLineRange(data));
-	}
-}
-
-/**
- * This method create a new list referenced with the global arry issueDiagnosticList from 
+ * This method create a new list referenced with the global array issueDiagnosticList from 
  * the response of the post request to the W3C API
  * @param requestReponse the response from the W3C API
  */
@@ -123,8 +123,7 @@ const createIssueDiagnosticsList = (requestReponse, fileLanguageID) => {
 
 	vscode.window.showErrorMessage(
 		`This ${fileLanguageID.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 'Clear all', warningCount > 0 && 'Clear warnings'
-	)
-		.then(selection => {//Ask the user if diagnostics have to be cleared from window
+	).then(selection => {//Ask the user if diagnostics have to be cleared from window
 			if (selection == 'Clear all')
 				clearDiagnosticsListAndUpdateWindow();
 			else if (selection == 'Clear warnings')
@@ -298,21 +297,21 @@ const activate = (context) => {
 
 	// The commands are defined in the package.json file
 
-	//Clear command
+	//Subscribe clear command
 	context.subscriptions.push(
 		vscode.commands.registerCommand('webvalidator.clearvalidation', () => {
 			clearDiagnosticsListAndUpdateWindow();
 		})
 	);
 
-	//Clear command
+	//Subscribe onDidChangeTextDocument
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(() => {
 			refreshWindowDiagnostics();
 		})
 	);
 
-	//Start validation command
+	//Subscribe start validation command
 	context.subscriptions.push(
 		vscode.commands.registerCommand('webvalidator.startvalidation', () => {
 			startValidation();
@@ -320,7 +319,6 @@ const activate = (context) => {
 	);
 
 	console.log("Web validator extension activated !");
-
 }
 
 // @ts-ignore
