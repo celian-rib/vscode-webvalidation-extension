@@ -11,7 +11,7 @@ let STATUS_BAR_ITEM_CLEAR_BTN: vscode.StatusBarItem;
 
 const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
-interface IMessage {
+export interface IMessage {
 	extract: string,
 	firstColumn: number,
 	hiliteLength: number,
@@ -28,7 +28,7 @@ interface IMessage {
  * - The line content is used for the auto clear feature, as it is compared with the actual content of this same line
  * @constructor Create an instance with one issue that come from the request of the API
  */
-class IssueDiagnostic {
+export class IssueDiagnostic {
 	diagnostic: vscode.Diagnostic;
 	lineRange: vscode.Range;
 	lineIntialContent: string | undefined;
@@ -98,7 +98,7 @@ const startValidation = () => {
 /**
  * @return true if the active text editor is a compatible file with the validation.
  */
-const activeFileIsValid = (document: vscode.TextDocument | undefined) => {
+const activeFileIsValid = (document: vscode.TextDocument | undefined): boolean => {
 	if (!document) {
 		vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
 		return false;
@@ -227,7 +227,7 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true
  * @param  data on message of the request
  * @return diagnostic object
  */
-const getDiagnostic = (data: IMessage) => {
+const getDiagnostic = (data: IMessage): vscode.Diagnostic => {
 	let severity = vscode.DiagnosticSeverity.Information;
 	switch (data.type) {
 		case 'error':
@@ -261,7 +261,7 @@ const getLineRange = (data: IMessage, document: vscode.TextDocument) => {
  * @param data One error message from the request
  * @return the corresponding Range of the given message from the request (data)
  */
-const getRange = (data: IMessage) => {
+const getRange = (data: IMessage): vscode.Range => {
 	let startPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1);
 	let stopPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1 + data.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
@@ -278,7 +278,7 @@ const updateStatusBarItem = (customText?: string) => {
 		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 	}
 	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
-	STATUS_BAR_ITEM.text = customText === undefined ? `$(rocket) Web Validator` : customText;
+	STATUS_BAR_ITEM.text = customText === undefined ? `$(pass) Web Validator` : customText;
 	STATUS_BAR_ITEM.tooltip = 'Check if this HTML or CSS document is up to standard with the W3C Validator API';
 	STATUS_BAR_ITEM.show();
 	console.log("Status bar item updated");
@@ -352,5 +352,8 @@ const deactivate = () => { console.log("Web validator extension disabled"); };
 
 module.exports = {
 	activate,
-	deactivate
+	deactivate,
+	activeFileIsValid,
+	getDiagnostic,
+	getRange
 };
