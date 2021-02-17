@@ -17,14 +17,14 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(1, [1, 2, 3].indexOf(2));
 	});
 
-	// /**
-	//  * Check if a, html file has been opened for testing the extension
-	//  */
-	// test('Launch setup for vscode', () => {
-	// 	const document = vscode.window.activeTextEditor?.document;
-	// 	assert.ok(document != undefined);
-	// 	assert.strictEqual(document.languageId, 'html');
-	// });
+	/**
+	 * Check if a, html file has been opened for testing the extension
+	 */
+	test('Launch setup for vscode', () => {
+		const document = vscode.window.activeTextEditor?.document;
+		assert.ok(document != undefined);
+		assert.deepStrictEqual(document.languageId, 'html');
+	});
 	
 	/**
 	 * Test of activaFileisValid()
