@@ -22,7 +22,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/test_workspace/index.html",
+				// "${workspaceFolder}/test_workspace/index.html",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index",
 			],

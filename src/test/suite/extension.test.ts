@@ -7,7 +7,14 @@ import * as extension from '../../extension';
 const validator = require('../../extension');
 
 suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+
+	const getTextDocument = async (): Promise<vscode.TextDocument> => {
+		return new Promise<vscode.TextDocument>((resolve) => {
+			vscode.workspace.openTextDocument({language: 'html', content: '<>'}).then(doc => {
+				resolve(doc);
+			});
+		});
+	};
 
 	/**
 	 * Check the setup for unit testing with vscode
@@ -20,8 +27,8 @@ suite('Extension Test Suite', () => {
 	/**
 	 * Check if a, html file has been opened for testing the extension
 	 */
-	test('Launch setup for vscode', () => {
-		const document = vscode.window.activeTextEditor?.document;
+	test('Launch setup for vscode', async () => {
+		const document = await getTextDocument();
 		assert.ok(document != undefined);
 		assert.deepStrictEqual(document.languageId, 'html');
 	});
@@ -29,11 +36,8 @@ suite('Extension Test Suite', () => {
 	/**
 	 * Test of activaFileisValid()
 	 */
-	test('activeFileIsValid()', () => {
-		const document = vscode.window.activeTextEditor?.document;
-		if(!document)
-			return;
-
+	test('activeFileIsValid()', async () => {
+		const document = await getTextDocument();
 		assert.ok(validator.activeFileIsValid(document));
 		assert.ok(!validator.activeFileIsValid(undefined));
 	});
@@ -53,9 +57,6 @@ suite('Extension Test Suite', () => {
 	 * Test of getDiagnostic()
 	 */
 	test('getDiagnostic()', () => {
-		const document = vscode.window.activeTextEditor?.document;
-		if(!document)
-			return;
 		const diagnostic: vscode.Diagnostic = validator.getDiagnostic(sampleData);
 		assert.strictEqual(diagnostic.message, sampleData.message);
 		assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
@@ -67,9 +68,6 @@ suite('Extension Test Suite', () => {
 	 * Test of getRange()
 	 */
 	test('getRange()', () => {
-		const document = vscode.window.activeTextEditor?.document;
-		if(!document)
-			return;
 		const range: vscode.Range = validator.getRange(sampleData);
 		assert.deepStrictEqual(range.start, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1));
 		assert.deepStrictEqual(range.end, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1 + sampleData.hiliteLength));
