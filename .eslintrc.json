@@ -1,4 +1,6 @@
 {
+	"root": true,
+    "parser": "@typescript-eslint/parser",
 	"env": {
 		"browser": false,
 		"commonjs": true,
@@ -13,7 +15,12 @@
 		},
 		"sourceType": "module"
 	},
+	"plugins": [
+        "@typescript-eslint"
+    ],
 	"rules": {
+		"@typescript-eslint/naming-convention": "warn",
+        "@typescript-eslint/semi": "warn",
 		"no-const-assign": "warn",
 		"no-this-before-super": "warn",
 		"no-undef": "warn",
