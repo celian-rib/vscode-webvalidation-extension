@@ -1,5 +1,4 @@
 // The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 const axios = require('axios').default;
 
@@ -30,10 +29,10 @@ export interface IMessage {
  */
 export class IssueDiagnostic {
 	diagnostic: vscode.Diagnostic;
-	lineRange: vscode.Range;
+	lineRange: vscode.Range | undefined;
 	lineIntialContent: string | undefined;
 	constructor(data: IMessage, document: vscode.TextDocument) {
-		const lr = getLineRange(data, document);
+		const lr = getLineRange(data.lastLine, document);
 		this.diagnostic = getDiagnostic(data);
 		this.lineRange = lr;
 		this.lineIntialContent = document.getText(lr);
@@ -77,7 +76,7 @@ const startValidation = () => {
 		.then((response: any) => {
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
-					createIssueDiagnosticsList(response.data.messages, fileLanguageID, document);
+					createIssueDiagnosticsList(response.data.messages, document);
 					updateStatusBarItemClearButton();
 				} else {
 					vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
@@ -96,6 +95,9 @@ const startValidation = () => {
 };
 
 /**
+ * Check if a file is valid for the validity (HTML or CSS), if not this methd handle
+ * the warning messages in the editor
+ * @param document The document to check
  * @return true if the active text editor is a compatible file with the validation.
  */
 const activeFileIsValid = (document: vscode.TextDocument | undefined): boolean => {
@@ -114,9 +116,10 @@ const activeFileIsValid = (document: vscode.TextDocument | undefined): boolean =
 /**
  * This method create a new list referenced with the global array issueDiagnosticList from 
  * the response of the post request to the W3C API
- * @param requestReponse the response from the W3C API
+ * @param requestMessages the response from the W3C API
+ * @param document the actual document
  */
-const createIssueDiagnosticsList = (requestReponse: IMessage[], fileLanguageID: string, document: vscode.TextDocument) => {
+const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument) => {
 	//The list (global variable issueDiagnosticList) is cleared before all.
 	//The goal here is to create or recreate the content of the list.
 	clearDiagnosticsListAndUpdateWindow(false, false);
@@ -126,7 +129,7 @@ const createIssueDiagnosticsList = (requestReponse: IMessage[], fileLanguageID: 
 
 	//For each request response, we create a new instance of the IssueDiagnostic class
 	//We also count the warning and error count, ot will then be displayed.
-	requestReponse.forEach(element => {
+	requestMessages.forEach(element => {
 		if (element.type === 'error')
 			errorCount++;
 		else
@@ -140,7 +143,7 @@ const createIssueDiagnosticsList = (requestReponse: IMessage[], fileLanguageID: 
 	refreshWindowDiagnostics();
 
 	vscode.window.showErrorMessage(
-		`This ${fileLanguageID.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 
+		`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 
 		...(warningCount > 0 ? ['Clear all', 'Clear warnings'] :  ['Clear all'])
 	).then(selection => {//Ask the user if diagnostics have to be cleared from window
 			if (selection === 'Clear all')
@@ -196,9 +199,9 @@ const refreshWindowDiagnostics = () => {
 /**
  * This method clear all diagnostic on window and in the issueDiagnosticList array
  * @param onlyWarning set to true if only warnings should be cleared
- * @param verbose set to false if no message should be displayed in the editor
+ * @param editorMessages set to false if no message should be displayed in the editor
  */
-const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true) => {
+const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages = true) => {
 	if (onlyWarning) {
 
 		let tempArr = ISSUE_DIAGNOSTIC_LIST;
@@ -208,14 +211,14 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true
 				{ISSUE_DIAGNOSTIC_LIST.push(element);}
 		});
 
-		if (verbose) {vscode.window.showWarningMessage('Warnings cleared.');}
+		if (editorMessages) {vscode.window.showWarningMessage('Warnings cleared.');}
 		
 		console.log("Warn cleared");
 		refreshWindowDiagnostics();
 	} else {
 		ISSUE_DIAGNOSTIC_LIST = [];
 		DIAGNOTIC_COLLECTION.clear();
-		if (verbose) {vscode.window.showWarningMessage('All errors and warnings cleared.');}
+		if (editorMessages) {vscode.window.showWarningMessage('All errors and warnings cleared.');}
 		console.log("All cleared");
 	}
 
@@ -224,12 +227,12 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, verbose = true
 
 /**
  * Create a diagnostic to be shown from one message collected by the W3C request
- * @param  data on message of the request
+ * @param  message the message from which the diagnostic will be created
  * @return diagnostic object
  */
-const getDiagnostic = (data: IMessage): vscode.Diagnostic => {
+const getDiagnostic = (message: IMessage): vscode.Diagnostic => {
 	let severity = vscode.DiagnosticSeverity.Information;
-	switch (data.type) {
+	switch (message.type) {
 		case 'error':
 			severity = vscode.DiagnosticSeverity.Error;
 			break;
@@ -239,31 +242,35 @@ const getDiagnostic = (data: IMessage): vscode.Diagnostic => {
 	}
 
 	const diagnostic = new vscode.Diagnostic(
-		getRange(data),
-		data.message,
+		getRange(message),
+		message.message,
 		severity
 	);
 	diagnostic.code = 'web_validator';
-	diagnostic.source = data.type;
+	diagnostic.source = message.type;
 
 	return diagnostic;
 };
 
 /**
- * @param data One error message from the request
- * @return the corresponding Range of the whole line of the given message from the request (data)
+ * @param line the line of the document to check
+ * @param document, the document to check
+ * @return the corresponding Range of the whole line of the given message from the request
  */
-const getLineRange = (data: IMessage, document: vscode.TextDocument) => {
-	return document.lineAt(data.lastLine - 1).range;
+const getLineRange = (line: number, document: vscode.TextDocument): vscode.Range | undefined => {
+	if(document.lineCount > line)
+		return document.lineAt(line - 1).range;
+	else
+		return undefined;
 };
 
 /**
- * @param data One error message from the request
- * @return the corresponding Range of the given message from the request (data)
+ * @param message The message from which the range will be created
+ * @return the corresponding Range of the given message
  */
-const getRange = (data: IMessage): vscode.Range => {
-	let startPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1);
-	let stopPosition = new vscode.Position(data.lastLine - 1, data.hiliteStart - 1 + data.hiliteLength);
+const getRange = (message: IMessage): vscode.Range => {
+	let startPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1);
+	let stopPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1 + message.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
 };
 
@@ -271,6 +278,7 @@ const getRange = (data: IMessage): vscode.Range => {
 /**
  * This method is called when the extension is activated (from activate())
  * It create a statusBarItem in vscode bottom bar
+ * @param customText set a custom text in the status bar item
  */
 const updateStatusBarItem = (customText?: string) => {
 	if (!STATUS_BAR_ITEM) {
@@ -286,7 +294,7 @@ const updateStatusBarItem = (customText?: string) => {
 
 /**
  * This method create or hide the clear button in status bar
- * @param hide 
+ * @param hide true if the goal is to hide the clear button
  */
 const updateStatusBarItemClearButton = (hide?: boolean) => {
 	if (!STATUS_BAR_ITEM_CLEAR_BTN) {
@@ -310,7 +318,7 @@ const updateStatusBarItemClearButton = (hide?: boolean) => {
  * first time the command is executed
  * The main goal of this method is to register all available commands such
  * as "start validation" or "clear diagnostic"
- * @param {vscode.ExtensionContext} context
+ * @param context
  */
 const activate = (context: vscode.ExtensionContext) => {
 
@@ -355,5 +363,6 @@ module.exports = {
 	deactivate,
 	activeFileIsValid,
 	getDiagnostic,
-	getRange
+	getRange,
+	getLineRange
 };
