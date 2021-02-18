@@ -72,5 +72,14 @@ suite('Extension Test Suite', () => {
 		assert.deepStrictEqual(range.start, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1));
 		assert.deepStrictEqual(range.end, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1 + sampleData.hiliteLength));
 	});
+
+	/**
+	 * Test of getlineRange()
+	 */
+	test('getLineRange()', async () => {
+		const document = await getTextDocument();
+		const  range = validator.getLineRange(sampleData.lastLine, document);
+		assert.strictEqual(range, undefined);
+	});
 	
 });
