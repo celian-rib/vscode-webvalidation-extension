@@ -361,8 +361,4 @@ const deactivate = () => { console.log("Web validator extension disabled"); };
 module.exports = {
 	activate,
 	deactivate,
-	activeFileIsValid,
-	getDiagnostic,
-	getRange,
-	getLineRange
 };

@@ -4,7 +4,13 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as extension from '../../extension';
-const validator = require('../../extension');
+
+var rewire = require("rewire");
+const validator = rewire('../../extension');
+const activeFileIsValid = validator.__get__('activeFileIsValid');
+const getDiagnostic = validator.__get__('getDiagnostic');
+const getRange = validator.__get__('getRange');
+const getLineRange = validator.__get__('getLineRange');
 
 suite('Extension Test Suite', () => {
 
@@ -38,8 +44,8 @@ suite('Extension Test Suite', () => {
 	 */
 	test('activeFileIsValid()', async () => {
 		const document = await getTextDocument();
-		assert.ok(validator.activeFileIsValid(document));
-		assert.ok(!validator.activeFileIsValid(undefined));
+		assert.ok(activeFileIsValid(document));
+		assert.ok(!activeFileIsValid(undefined));
 	});
 
 	const sampleData: extension.IMessage = {
@@ -57,7 +63,7 @@ suite('Extension Test Suite', () => {
 	 * Test of getDiagnostic()
 	 */
 	test('getDiagnostic()', () => {
-		const diagnostic: vscode.Diagnostic = validator.getDiagnostic(sampleData);
+		const diagnostic: vscode.Diagnostic = getDiagnostic(sampleData);
 		assert.strictEqual(diagnostic.message, sampleData.message);
 		assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
 		assert.strictEqual(diagnostic.code, 'web_validator');
@@ -68,7 +74,7 @@ suite('Extension Test Suite', () => {
 	 * Test of getRange()
 	 */
 	test('getRange()', () => {
-		const range: vscode.Range = validator.getRange(sampleData);
+		const range: vscode.Range = getRange(sampleData);
 		assert.deepStrictEqual(range.start, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1));
 		assert.deepStrictEqual(range.end, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1 + sampleData.hiliteLength));
 	});
@@ -78,7 +84,7 @@ suite('Extension Test Suite', () => {
 	 */
 	test('getLineRange()', async () => {
 		const document = await getTextDocument();
-		const  range = validator.getLineRange(sampleData.lastLine, document);
+		const  range = getLineRange(sampleData.lastLine, document);
 		assert.strictEqual(range, undefined);
 	});
 	
