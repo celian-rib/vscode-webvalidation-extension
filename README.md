@@ -35,7 +35,9 @@ If errors are detected you'll be able to see them directly in your file.
 ### 3/ Correct your issues !
 All errors and warnings have a diagnostic that will help you to correct them.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic.png?raw=true)
+
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic2.png?raw=true)
+
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic3.png?raw=true)
 
 ***
