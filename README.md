@@ -26,15 +26,17 @@ Press the extension button and the validation will start right away.
 
 ***
 
-### 2/ Check if an issue is detected !
-If errors are detected you'll be able to see them directly in your HTML file.
+### 2/ Check if any issue is detected !
+If errors are detected you'll be able to see them directly in your file.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/popup.png?raw=true)
 
 ***
 
 ### 3/ Correct your issues !
-All errors have a diagnostic that will help you to correct them.
+All errors and warnings have a diagnostic that will help you to correct them.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic.png?raw=true)
+>![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic2.png?raw=true)
+>![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic3.png?raw=true)
 
 ***
 
