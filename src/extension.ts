@@ -1,6 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 import * as vscode from 'vscode';
-const axios = require('axios').default;
+import axios from 'axios';
 
 const DIAGNOTIC_COLLECTION = vscode.languages.createDiagnosticCollection('webcollection');
 let ISSUE_DIAGNOSTIC_LIST: IssueDiagnostic[] = [];
@@ -19,7 +19,7 @@ export interface IMessage {
 	lastLine: number,
 	message: string,
 	type: string
-};
+}
 
 /**
  * Class that contain a vscode.diagnostic and its correponding line's range with the 
@@ -50,7 +50,7 @@ const startValidation = () => {
 	//Only suport HTML and CSS files for the moment
 	if (!activeFileIsValid(document)) return;
 
-	if(!document) return;
+	if (!document) return;
 
 	//Current diagnostics are cleared, everything is reseted.
 	clearDiagnosticsListAndUpdateWindow(false, false);
@@ -63,7 +63,7 @@ const startValidation = () => {
 		`Validation starting on this ${fileLanguageID.toUpperCase()} file...`
 	);
 
-	updateStatusBarItem(`$(sync~spin) Loading ...`);
+	updateStatusBarItem('$(sync~spin) Loading ...');
 
 	//Request header
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -73,7 +73,7 @@ const startValidation = () => {
 	axios.post(W3C_API_URL, filecontent, {
 		headers: headers,
 	})
-		.then((response: any) => {
+		.then((response) => {
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
 					createIssueDiagnosticsList(response.data.messages, document);
@@ -85,7 +85,7 @@ const startValidation = () => {
 				vscode.window.showErrorMessage('200, No data.');
 			}
 		})
-		.catch((error: any) => {
+		.catch((error) => {
 			console.error(error);
 			vscode.window.showErrorMessage('An error occured.');
 		})
@@ -102,12 +102,12 @@ const startValidation = () => {
  */
 const activeFileIsValid = (document: vscode.TextDocument | undefined, editorWarning = true): boolean => {
 	if (!document) {
-		if(editorWarning) vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
+		if (editorWarning) vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
 		return false;
 	}
 	const languageID = document.languageId.toUpperCase();
-	if (languageID !== "HTML" && languageID !== "CSS") {
-		if(editorWarning) vscode.window.showWarningMessage('Not an HTML or CSS file.');
+	if (languageID !== 'HTML' && languageID !== 'CSS') {
+		if (editorWarning) vscode.window.showWarningMessage('Not an HTML or CSS file.');
 		return false;
 	}
 	return true;
@@ -143,14 +143,12 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 	refreshWindowDiagnostics();
 
 	vscode.window.showErrorMessage(
-		`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`, 
-		...(warningCount > 0 ? ['Clear all', 'Clear warnings'] :  ['Clear all'])
+		`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
+		...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
 	).then(selection => {//Ask the user if diagnostics have to be cleared from window
-			if (selection === 'Clear all')
-				{clearDiagnosticsListAndUpdateWindow();}
-			else if (selection === 'Clear warnings')
-				{clearDiagnosticsListAndUpdateWindow(true);}
-		});
+		if (selection === 'Clear all') { clearDiagnosticsListAndUpdateWindow(); }
+		else if (selection === 'Clear warnings') { clearDiagnosticsListAndUpdateWindow(true); }
+	});
 };
 
 /**
@@ -159,8 +157,7 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
  * This is called on every changes in the active text editor.
  */
 const refreshWindowDiagnostics = () => {
-	if(! vscode.window.activeTextEditor)
-		{return;}
+	if (!vscode.window.activeTextEditor) { return; }
 
 	try {
 		//Clearing window's diagnostic
@@ -175,7 +172,7 @@ const refreshWindowDiagnostics = () => {
 			const currentLineContent = vscode.window.activeTextEditor?.document.getText(element.lineRange);
 			if (element.lineIntialContent !== currentLineContent) {
 				ISSUE_DIAGNOSTIC_LIST.splice(ISSUE_DIAGNOSTIC_LIST.indexOf(element), 1);
-				console.log("1 issue auto cleared");
+				console.log('1 issue auto cleared');
 			} else {
 				//In case the line has no changes, that means we should keep this diagnostic on page.
 				diagnostics.push(element.diagnostic);
@@ -188,8 +185,7 @@ const refreshWindowDiagnostics = () => {
 			diagnostics
 		);
 
-		if (diagnostics.length === 0)
-			{updateStatusBarItemClearButton(true);}
+		if (diagnostics.length === 0) { updateStatusBarItemClearButton(true); }
 	}
 	catch (e) {
 		console.error(e);
@@ -204,22 +200,21 @@ const refreshWindowDiagnostics = () => {
 const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages = true) => {
 	if (onlyWarning) {
 
-		let tempArr = ISSUE_DIAGNOSTIC_LIST;
+		const tempArr = ISSUE_DIAGNOSTIC_LIST;
 		ISSUE_DIAGNOSTIC_LIST = [];
 		tempArr.forEach(element => {
-			if(element.diagnostic.severity === vscode.DiagnosticSeverity.Error)
-				{ISSUE_DIAGNOSTIC_LIST.push(element);}
+			if (element.diagnostic.severity === vscode.DiagnosticSeverity.Error) { ISSUE_DIAGNOSTIC_LIST.push(element); }
 		});
 
-		if (editorMessages) {vscode.window.showWarningMessage('Warnings cleared.');}
-		
-		console.log("Warn cleared");
+		if (editorMessages) { vscode.window.showWarningMessage('Warnings cleared.'); }
+
+		console.log('Warn cleared');
 		refreshWindowDiagnostics();
 	} else {
 		ISSUE_DIAGNOSTIC_LIST = [];
 		DIAGNOTIC_COLLECTION.clear();
-		if (editorMessages) {vscode.window.showWarningMessage('All errors and warnings cleared.');}
-		console.log("All cleared");
+		if (editorMessages) { vscode.window.showWarningMessage('All errors and warnings cleared.'); }
+		console.log('All cleared');
 		updateStatusBarItemClearButton(true);
 	}
 
@@ -233,12 +228,12 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages
 const getDiagnostic = (message: IMessage): vscode.Diagnostic => {
 	let severity = vscode.DiagnosticSeverity.Information;
 	switch (message.type) {
-		case 'error':
-			severity = vscode.DiagnosticSeverity.Error;
-			break;
-		case 'info':
-			severity = vscode.DiagnosticSeverity.Warning;
-			break;
+	case 'error':
+		severity = vscode.DiagnosticSeverity.Error;
+		break;
+	case 'info':
+		severity = vscode.DiagnosticSeverity.Warning;
+		break;
 	}
 
 	const diagnostic = new vscode.Diagnostic(
@@ -258,7 +253,7 @@ const getDiagnostic = (message: IMessage): vscode.Diagnostic => {
  * @return the corresponding Range of the whole line of the given message from the request
  */
 const getLineRange = (line: number, document: vscode.TextDocument): vscode.Range | undefined => {
-	if(document.lineCount > line)
+	if (document.lineCount > line)
 		return document.lineAt(line - 1).range;
 	else
 		return undefined;
@@ -269,8 +264,8 @@ const getLineRange = (line: number, document: vscode.TextDocument): vscode.Range
  * @return the corresponding Range of the given message
  */
 const getRange = (message: IMessage): vscode.Range => {
-	let startPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1);
-	let stopPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1 + message.hiliteLength);
+	const startPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1);
+	const stopPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1 + message.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
 };
 
@@ -281,15 +276,15 @@ const getRange = (message: IMessage): vscode.Range => {
  */
 const updateStatusBarItem = (customText?: string) => {
 	if (!STATUS_BAR_ITEM) {
-		console.log("Status bar item created");
+		console.log('Status bar item created');
 		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 	}
 	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
-	const defaultText = `$(pass)`+ (activeFileIsValid(vscode.window.activeTextEditor?.document, false) ? ' W3C validation' : '');
+	const defaultText = '$(pass)' + (activeFileIsValid(vscode.window.activeTextEditor?.document, false) ? ' W3C validation' : '');
 	STATUS_BAR_ITEM.text = customText === undefined ? defaultText : customText;
 	STATUS_BAR_ITEM.tooltip = 'Start the W3C validation of this file';
 	STATUS_BAR_ITEM.show();
-	console.log("Status bar item updated");
+	console.log('Status bar item updated');
 };
 
 /**
@@ -299,17 +294,17 @@ const updateStatusBarItem = (customText?: string) => {
 const updateStatusBarItemClearButton = (hide?: boolean) => {
 	if (!STATUS_BAR_ITEM_CLEAR_BTN) {
 		STATUS_BAR_ITEM_CLEAR_BTN = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-		console.log("Clear button created");
+		console.log('Clear button created');
 	}
 	STATUS_BAR_ITEM_CLEAR_BTN.command = 'webvalidator.clearvalidation';
-	STATUS_BAR_ITEM_CLEAR_BTN.text = `$(notifications-clear) Clear W3C validation`;
+	STATUS_BAR_ITEM_CLEAR_BTN.text = '$(notifications-clear) Clear W3C validation';
 	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the W3C Web Validator extension';
 	if (hide)
 		STATUS_BAR_ITEM_CLEAR_BTN.hide();
 	else
 		STATUS_BAR_ITEM_CLEAR_BTN.show();
 
-	console.log("Clear button updated");
+	console.log('Clear button updated');
 };
 
 /**
@@ -340,7 +335,7 @@ const activate = (context: vscode.ExtensionContext) => {
 			refreshWindowDiagnostics();
 		})
 	);
-	
+
 	//Subscribe onDidChangeActiveTextEditor
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(() => {
@@ -355,7 +350,7 @@ const activate = (context: vscode.ExtensionContext) => {
 		})
 	);
 
-	console.log("Web validator extension activated !");
+	console.log('Web validator extension activated !');
 };
 
 exports.activate = activate;
@@ -363,7 +358,7 @@ exports.activate = activate;
 /**
  * Method called when the extension id deactivated
  */
-const deactivate = () => { console.log("Web validator extension disabled"); };
+const deactivate = () => { console.log('Web validator extension disabled'); };
 
 module.exports = {
 	activate,

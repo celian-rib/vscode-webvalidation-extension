@@ -5,7 +5,8 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as extension from '../../extension';
 
-var rewire = require("rewire");
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rewire = require('rewire');
 const validator = rewire('../../extension');
 const activeFileIsValid = validator.__get__('activeFileIsValid');
 const getDiagnostic = validator.__get__('getDiagnostic');
