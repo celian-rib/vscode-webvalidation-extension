@@ -63,7 +63,7 @@ const startValidation = () => {
 		`Validation starting on this ${fileLanguageID.toUpperCase()} file...`
 	);
 
-	updateStatusBarItem("$(settings-sync-view-icon~spin) Loading ...");
+	updateStatusBarItem(`$(sync~spin) Loading ...`);
 
 	//Request header
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -100,14 +100,14 @@ const startValidation = () => {
  * @param document The document to check
  * @return true if the active text editor is a compatible file with the validation.
  */
-const activeFileIsValid = (document: vscode.TextDocument | undefined): boolean => {
+const activeFileIsValid = (document: vscode.TextDocument | undefined, editorWarning = true): boolean => {
 	if (!document) {
-		vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
+		if(editorWarning) vscode.window.showWarningMessage('Open a supported file first. (CSS/HTML)');
 		return false;
 	}
 	const languageID = document.languageId.toUpperCase();
 	if (languageID !== "HTML" && languageID !== "CSS") {
-		vscode.window.showWarningMessage('Not an HTML or CSS file.');
+		if(editorWarning) vscode.window.showWarningMessage('Not an HTML or CSS file.');
 		return false;
 	}
 	return true;
@@ -220,9 +220,9 @@ const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages
 		DIAGNOTIC_COLLECTION.clear();
 		if (editorMessages) {vscode.window.showWarningMessage('All errors and warnings cleared.');}
 		console.log("All cleared");
+		updateStatusBarItemClearButton(true);
 	}
 
-	updateStatusBarItemClearButton(true);
 };
 
 /**
@@ -274,7 +274,6 @@ const getRange = (message: IMessage): vscode.Range => {
 	return new vscode.Range(startPosition, stopPosition);
 };
 
-
 /**
  * This method is called when the extension is activated (from activate())
  * It create a statusBarItem in vscode bottom bar
@@ -286,8 +285,9 @@ const updateStatusBarItem = (customText?: string) => {
 		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 	}
 	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
-	STATUS_BAR_ITEM.text = customText === undefined ? `$(pass) Web Validator` : customText;
-	STATUS_BAR_ITEM.tooltip = 'Check if this HTML or CSS document is up to standard with the W3C Validator API';
+	const defaultText = `$(pass)`+ (activeFileIsValid(vscode.window.activeTextEditor?.document, false) ? ' W3C validation' : '');
+	STATUS_BAR_ITEM.text = customText === undefined ? defaultText : customText;
+	STATUS_BAR_ITEM.tooltip = 'Start the W3C validation of this file';
 	STATUS_BAR_ITEM.show();
 	console.log("Status bar item updated");
 };
@@ -302,8 +302,8 @@ const updateStatusBarItemClearButton = (hide?: boolean) => {
 		console.log("Clear button created");
 	}
 	STATUS_BAR_ITEM_CLEAR_BTN.command = 'webvalidator.clearvalidation';
-	STATUS_BAR_ITEM_CLEAR_BTN.text = `$(notifications-clear) Clear web validation`;
-	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the web validator extension';
+	STATUS_BAR_ITEM_CLEAR_BTN.text = `$(notifications-clear) Clear W3C validation`;
+	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the W3C Web Validator extension';
 	if (hide)
 		STATUS_BAR_ITEM_CLEAR_BTN.hide();
 	else
@@ -338,6 +338,13 @@ const activate = (context: vscode.ExtensionContext) => {
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(() => {
 			refreshWindowDiagnostics();
+		})
+	);
+	
+	//Subscribe onDidChangeActiveTextEditor
+	context.subscriptions.push(
+		vscode.window.onDidChangeActiveTextEditor(() => {
+			updateStatusBarItem();
 		})
 	);
 
