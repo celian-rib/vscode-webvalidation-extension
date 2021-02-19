@@ -1,4 +1,8 @@
-# Change Log
+# W3C Web validator - Change Log
+
+## [1.0.9]
+
+- Status bar item is now smaller on unsupported files.
 
 ## [1.0.8]
 
