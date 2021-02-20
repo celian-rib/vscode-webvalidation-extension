@@ -16,6 +16,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "no-trailing-spaces": "error",
         "indent": [
             "error",
             "tab"

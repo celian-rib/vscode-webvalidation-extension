@@ -22,7 +22,7 @@ export interface IMessage {
 }
 
 /**
- * Class that contain a vscode.diagnostic and its correponding line's range with the 
+ * Class that contain a vscode.diagnostic and its correponding line's range with the
  * original content of this same line
  * - The line content is used for the auto clear feature, as it is compared with the actual content of this same line
  * @constructor Create an instance with one issue that come from the request of the API
@@ -46,7 +46,7 @@ export class IssueDiagnostic {
 const startValidation = () => {
 
 	const document = vscode.window.activeTextEditor?.document;
-	//Check if file is valid 
+	//Check if file is valid
 	//Only suport HTML and CSS files for the moment
 	if (!activeFileIsValid(document)) return;
 
@@ -59,21 +59,31 @@ const startValidation = () => {
 
 	//All the file content as raw text, this will be send as the request body
 	const filecontent = document.getText();
-	vscode.window.showInformationMessage(
-		`Validation starting on this ${fileLanguageID.toUpperCase()} file...`
-	);
 
-	updateStatusBarItem('$(sync~spin) Loading ...');
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'W3C validation ...',
+		cancellable: false,
+	},(progress, token) => {
+		updateStatusBarItem('$(sync~spin) Loading ...');
 
-	//Request header
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const headers = { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` };
+		token.onCancellationRequested(() => {
+			console.log('User canceled the validation');
+		});
 
-	//Starting axios request on the W3C API, post request with raw file content
-	axios.post(W3C_API_URL, filecontent, {
-		headers: headers,
-	})
-		.then((response) => {
+		return axios.post(W3C_API_URL, filecontent, {
+			headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
+		}).then(response => {
+			return response;
+		}).catch((error) => {
+			console.error(error);
+			vscode.window.showErrorMessage('An error occured.');
+			return null;
+		}).finally(() => {
+			updateStatusBarItem();
+		});
+	}).then(response => {
+		if(response){
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
 					createIssueDiagnosticsList(response.data.messages, document);
@@ -84,14 +94,8 @@ const startValidation = () => {
 			} else {
 				vscode.window.showErrorMessage('200, No data.');
 			}
-		})
-		.catch((error) => {
-			console.error(error);
-			vscode.window.showErrorMessage('An error occured.');
-		})
-		.finally(() => {
-			updateStatusBarItem();
-		});
+		}
+	});
 };
 
 /**
@@ -114,7 +118,7 @@ const activeFileIsValid = (document: vscode.TextDocument | undefined, editorWarn
 };
 
 /**
- * This method create a new list referenced with the global array issueDiagnosticList from 
+ * This method create a new list referenced with the global array issueDiagnosticList from
  * the response of the post request to the W3C API
  * @param requestMessages the response from the W3C API
  * @param document the actual document
@@ -309,7 +313,7 @@ const updateStatusBarItemClearButton = (hide?: boolean) => {
 
 /**
  * This method is called when the extension is activated
- * The extension is activated on launch or on the very 
+ * The extension is activated on launch or on the very
  * first time the command is executed
  * The main goal of this method is to register all available commands such
  * as "start validation" or "clear diagnostic"
