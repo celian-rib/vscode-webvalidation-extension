@@ -39,7 +39,7 @@ suite('Extension Test Suite', () => {
 		assert.ok(document != undefined);
 		assert.deepStrictEqual(document.languageId, 'html');
 	});
-	
+
 	/**
 	 * Test of activaFileisValid()
 	 */
@@ -70,7 +70,7 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(diagnostic.code, 'web_validator');
 		assert.strictEqual(diagnostic.source, sampleData.type);
 	});
-	
+
 	/**
 	 * Test of getRange()
 	 */
@@ -88,5 +88,5 @@ suite('Extension Test Suite', () => {
 		const  range = getLineRange(sampleData.lastLine, document);
 		assert.strictEqual(range, undefined);
 	});
-	
+
 });
