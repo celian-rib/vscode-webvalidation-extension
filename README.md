@@ -8,12 +8,15 @@
       <img alt="Version" src="https://vsmarketplacebadge.apphb.com/version/CelianRiboulet.webvalidator.svg" />
     </a>
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Trends" src="https://vsmarketplacebadge.apphb.com/trending-monthly/CelianRiboulet.webvalidator.svg" />
+      <img alt="Rating" src="https://vsmarketplacebadge.apphb.com/rating-star/CelianRiboulet.webvalidator.svg" />
     </a>
     <br />
     <br />
+    <a href="https://github.com/celian-rib/vscode-webvalidation-extension/actions/workflows/main.yml">
+      <img alt="Build" src="https://github.com/celian-rib/vscode-webvalidation-extension/actions/workflows/main.yml/badge.svg" />
+    </a>
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Downloads" src="https://vsmarketplacebadge.apphb.com/downloads-short/CelianRiboulet.webvalidator.svg" />
+      <img alt="Installs" src="https://vsmarketplacebadge.apphb.com/installs/CelianRiboulet.webvalidator.svg" />
     </a>
     <h4 align="center">Validity is one of the quality criteria for a Web page</h4>
 </p>
