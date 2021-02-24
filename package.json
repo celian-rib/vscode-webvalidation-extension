@@ -1,7 +1,7 @@
 {
 	"name": "webvalidator",
 	"displayName": "W3C Web Validator",
-	"description": "Check the validity of your HTML and CSS files with the W3C Validator API",
+	"description": "Check the validity of your HTML and CSS files with the W3C Validator API (Java - JDK not required)",
 	"publisher": "CelianRiboulet",
 	"version": "1.0.9",
 	"icon": "images/webvalidator.png",
@@ -13,7 +13,8 @@
 		"url": "https://github.com/celian-rib/vscode-webvalidation-extension"
 	},
 	"categories": [
-		"Other"
+		"Other",
+		"Linters"
 	],
 	"keywords": [
 		"validator",
