@@ -1,5 +1,5 @@
 <p align="center">
- <img width="100px" src="https://raw.githubusercontent.com/celian-rib/vscode-webvalidation-extension/main/images/webvalidator.png" align="center" alt="GitHub Readme Stats" />
+ <img width="100px" height="100px" src="https://raw.githubusercontent.com/celian-rib/vscode-webvalidation-extension/main/images/webvalidator.png" align="center" alt="GitHub Readme Stats" />
  <h2 align="center">VSCode W3C Web Validator</h2>
  <p align="center">Check the <a href="https://validator.w3.org/docs/help.html#validation_basics">markup<a/> validity of your web documents !</p>
 </p>
@@ -44,6 +44,17 @@ All errors and warnings have a diagnostic that will help you to correct them.
 >![](https://github.com/celian-rib/vscode-webvalidation-extension/blob/main/images/diagnostic3.png?raw=true)
 
 ***
+
+<details>
+  <summary>Upcoming improvements</summary>
+
+  - Check all your compatible workspace's files at the same time.
+
+  - Auto-check all files in background every ten or twenty minutes.
+
+***
+
+</details>
 
 > [Report a bug](https://github.com/celian-rib/vscode-webvalidation-extension/issues) <br />
 > Author : Riboulet Célian
