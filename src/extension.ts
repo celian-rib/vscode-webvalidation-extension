@@ -1,7 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 import * as vscode from 'vscode';
-import IssueDiagnostic from './IssueDiagnostic';
 import * as validation from './validation';
+import IssueDiagnostic from './IssueDiagnostic';
+import ValidationStatusBarItem from './StatusBarItem';
+import { activeFileIsValid } from './utils';
 
 /**
  * Messages are elements sends as issues by the W3C validation API
@@ -27,8 +29,8 @@ export interface IMessage {
  */
 export const activate = (context: vscode.ExtensionContext): void => {
 
-	//Creating the button in status bar on launch
-	validation.updateStatusBarItem();
+	//Creating the buttons in status bar on launch
+	ValidationStatusBarItem.createValidationItems();
 
 	// The commands are defined in the package.json file
 
@@ -50,7 +52,7 @@ export const activate = (context: vscode.ExtensionContext): void => {
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeTextDocument(() => {
 			IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
-				allCleared && validation.updateStatusBarItemClearButton(true);
+				ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 			});
 		})
 	);
@@ -58,7 +60,11 @@ export const activate = (context: vscode.ExtensionContext): void => {
 	//Subscribe onDidChangeActiveTextEditor
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(() => {
-			validation.updateStatusBarItem();
+			const fileValid = activeFileIsValid(vscode.window.activeTextEditor?.document);
+			fileValid ?
+				ValidationStatusBarItem.validationItem.updateContent()
+				:
+				ValidationStatusBarItem.validationItem.updateContent('');
 		})
 	);
 

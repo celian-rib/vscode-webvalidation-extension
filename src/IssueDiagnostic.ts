@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { IMessage } from './extension';
-import { getLineRange, getRange } from './utils';
+import { getLineRange, getMessageRange } from './utils';
 
 /**
  * Class that contain a vscode.diagnostic and its correponding line's range with the
@@ -78,7 +78,7 @@ export default class IssueDiagnostic {
 		}
 
 		const diagnostic = new vscode.Diagnostic(
-			getRange(message),
+			getMessageRange(message),
 			message.message,
 			severity
 		);

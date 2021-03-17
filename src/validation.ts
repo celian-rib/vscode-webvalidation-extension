@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
 import axios from 'axios';
 import { activeFileIsValid } from './utils';
-import IssueDiagnostic from './IssueDiagnostic';
 import { IMessage } from './extension';
+import IssueDiagnostic from './IssueDiagnostic';
+import ValidationStatusBarItem from './StatusBarItem';
 
 const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
-
-let STATUS_BAR_ITEM: vscode.StatusBarItem;
-let STATUS_BAR_ITEM_CLEAR_BTN: vscode.StatusBarItem;
 
 /**
  * This is the main method of the extension, it make a request to the W3C API and
@@ -35,7 +33,7 @@ export const startValidation = (): void => {
 		title: 'W3C validation ...',
 		cancellable: false,
 	}, (progress, token) => {
-		updateStatusBarItem('$(sync~spin) Loading ...');
+		ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
 
 		token.onCancellationRequested(() => {
 			console.log('User canceled the validation');
@@ -50,14 +48,14 @@ export const startValidation = (): void => {
 			vscode.window.showErrorMessage('An error occured.');
 			return null;
 		}).finally(() => {
-			updateStatusBarItem();
+			ValidationStatusBarItem.validationItem.updateContent();
 		});
 	}).then(response => {
 		if (response) {
 			if (response.data) {//Check if response is not empty
 				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
-					createIssueDiagnosticsList(response.data.messages, document);
-					updateStatusBarItemClearButton();
+					createIssueDiagnosticsList(response.data.messages as IMessage[], document);
+					ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
 				} else {
 					vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
 				}
@@ -96,7 +94,7 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 	//We now refresh the diagnostics on the current text editor with
 	//the list that is now refilled correctly with the informations of the request
 	IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
-		allCleared && updateStatusBarItemClearButton(true);
+		ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 	});
 
 	vscode.window.showErrorMessage(
@@ -118,50 +116,11 @@ export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorM
 		IssueDiagnostic.clearErrorsDiagnostics();
 		if (editorMessages) vscode.window.showWarningMessage('Warnings cleared.');
 		IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
-			allCleared && updateStatusBarItemClearButton(true);
+			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 		});
 	} else {
 		IssueDiagnostic.clearAllDiagnostics();
 		if (editorMessages) vscode.window.showWarningMessage('All errors and warnings cleared.');
-		console.log('All cleared');
-		updateStatusBarItemClearButton(true);
+		ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
 	}
-};
-
-/**
- * This method is called when the extension is activated (from activate())
- * It create a statusBarItem in vscode bottom bar
- * @param customText set a custom text in the status bar item
- */
-export const updateStatusBarItem = (customText?: string): void => {
-	if (!STATUS_BAR_ITEM) {
-		console.log('Status bar item created');
-		STATUS_BAR_ITEM = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-	}
-	STATUS_BAR_ITEM.command = 'webvalidator.startvalidation';
-	const defaultText = '$(pass)' + (activeFileIsValid(vscode.window.activeTextEditor?.document, false) ? ' W3C validation' : '');
-	STATUS_BAR_ITEM.text = customText === undefined ? defaultText : customText;
-	STATUS_BAR_ITEM.tooltip = 'Start the W3C validation of this file';
-	STATUS_BAR_ITEM.show();
-	console.log('Status bar item updated');
-};
-
-/**
- * This method create or hide the clear button in status bar
- * @param hide true if the goal is to hide the clear button
- */
-export const updateStatusBarItemClearButton = (hide?: boolean): void => {
-	if (!STATUS_BAR_ITEM_CLEAR_BTN) {
-		STATUS_BAR_ITEM_CLEAR_BTN = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
-		console.log('Clear button created');
-	}
-	STATUS_BAR_ITEM_CLEAR_BTN.command = 'webvalidator.clearvalidation';
-	STATUS_BAR_ITEM_CLEAR_BTN.text = '$(notifications-clear) Clear W3C validation';
-	STATUS_BAR_ITEM_CLEAR_BTN.tooltip = 'This will clear all issues made by the W3C Web Validator extension';
-	if (hide)
-		STATUS_BAR_ITEM_CLEAR_BTN.hide();
-	else
-		STATUS_BAR_ITEM_CLEAR_BTN.show();
-
-	console.log('Clear button updated');
 };

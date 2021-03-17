@@ -24,7 +24,7 @@ export const activeFileIsValid = (document: vscode.TextDocument | undefined, edi
  * @param message The message from which the range will be created
  * @return the corresponding Range of the given message
  */
-export const getRange = (message: IMessage): vscode.Range => {
+export const getMessageRange = (message: IMessage): vscode.Range => {
 	const startPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1);
 	const stopPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1 + message.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
