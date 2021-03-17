@@ -19,7 +19,8 @@
         "no-trailing-spaces": "error",
         "indent": [
             "error",
-            "tab"
+            "tab",
+            { "SwitchCase": 1 }
         ],
         "linebreak-style": [
             "error",
@@ -32,6 +33,7 @@
         "semi": [
             "error",
             "always"
-        ]
+        ],
+        "eol-last" : "error"
     }
 }
