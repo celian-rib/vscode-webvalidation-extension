@@ -1,7 +1,7 @@
 {
 	"name": "webvalidator",
 	"displayName": "W3C Web Validator",
-	"description": "Check the validity of your HTML and CSS files with the W3C Validator API (JDK not required)",
+	"description": "Check the validity of your HTML/CSS files in one click",
 	"publisher": "CelianRiboulet",
 	"version": "1.0.9",
 	"icon": "images/webvalidator.png",
