@@ -49,12 +49,18 @@ export default class IssueDiagnostic {
 		IssueDiagnostic.issueDiagnostics.push(this);
 	}
 
-	static clearAllDiagnostics(): void {
+	/**
+	 * Clear all the diagnostics on the workspace that are related to the validation
+	 */
+	static clearAllVSCodeDiagnostics(): void {
 		IssueDiagnostic.issueDiagnostics = [];
 		IssueDiagnostic.vscodeDiagnostics.clear();
 	}
 
-	static clearErrorsDiagnostics(): void {
+	/**
+	 * Clear all the error diagnostics on the worspace that are related to the validation
+	 */
+	static clearVSCodeErrorsDiagnostics(): void {
 		IssueDiagnostic.issueDiagnostics = IssueDiagnostic.issueDiagnostics
 			.filter(d =>
 				d.diagnostic.severity === vscode.DiagnosticSeverity.Error

@@ -113,13 +113,13 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
  */
 export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages = true): void => {
 	if (onlyWarning) {
-		IssueDiagnostic.clearErrorsDiagnostics();
+		IssueDiagnostic.clearVSCodeErrorsDiagnostics();
 		if (editorMessages) vscode.window.showWarningMessage('Warnings cleared.');
 		IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
 			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 		});
 	} else {
-		IssueDiagnostic.clearAllDiagnostics();
+		IssueDiagnostic.clearAllVSCodeDiagnostics();
 		if (editorMessages) vscode.window.showWarningMessage('All errors and warnings cleared.');
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
 	}
