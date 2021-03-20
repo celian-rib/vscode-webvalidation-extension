@@ -87,6 +87,9 @@ export default class ValidationStatusBarItem {
 		show ? this.item.show() : this.item.hide();
 	}
 
+	/**
+	 * Set the startValidation item text visibility depending on the current active editor window
+	 */
 	static updateValidationItemTextVisibility(): void {
 		activeFileIsValid(vscode.window.activeTextEditor?.document, false)
 			?
