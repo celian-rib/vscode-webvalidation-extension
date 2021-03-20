@@ -2,8 +2,7 @@
 import * as vscode from 'vscode';
 import * as validation from './validation';
 import IssueDiagnostic from './IssueDiagnostic';
-import ValidationStatusBarItem from './StatusBarItem';
-import { activeFileIsValid } from './utils';
+import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 /**
  * Messages are elements sends as issues by the W3C validation API
@@ -60,11 +59,7 @@ export const activate = (context: vscode.ExtensionContext): void => {
 	//Subscribe onDidChangeActiveTextEditor
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(() => {
-			const fileValid = activeFileIsValid(vscode.window.activeTextEditor?.document);
-			fileValid ?
-				ValidationStatusBarItem.validationItem.updateContent()
-				:
-				ValidationStatusBarItem.validationItem.updateContent('');
+			ValidationStatusBarItem.updateValidationItemTextVisibility();
 		})
 	);
 

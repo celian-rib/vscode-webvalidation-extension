@@ -3,7 +3,7 @@ import axios from 'axios';
 import { activeFileIsValid } from './utils';
 import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
-import ValidationStatusBarItem from './StatusBarItem';
+import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { IMessage } from './extension';
-import { getLineRange, getMessageRange } from './utils';
+import * as utils from './utils';
 
 /**
  * Class that contain a vscode.diagnostic and its correponding line's range with the
@@ -42,7 +42,7 @@ export default class IssueDiagnostic {
 	 * @param document the document on which the diagnostic is created
 	 */
 	constructor(message: IMessage, document: vscode.TextDocument) {
-		const lineRange = getLineRange(message.lastLine, document);
+		const lineRange = utils.getLineRange(message.lastLine, document);
 		this.diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(message);
 		this.lineRange = lineRange;
 		this.lineIntialContent = document.getText(lineRange);
@@ -84,7 +84,7 @@ export default class IssueDiagnostic {
 		}
 
 		const diagnostic = new vscode.Diagnostic(
-			getMessageRange(message),
+			utils.getMessageRange(message),
 			message.message,
 			severity
 		);
@@ -137,4 +137,3 @@ export default class IssueDiagnostic {
 		});
 	};
 }
-

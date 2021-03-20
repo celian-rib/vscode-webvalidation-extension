@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { activeFileIsValid } from './utils';
 
 export default class ValidationStatusBarItem {
 
@@ -32,6 +33,7 @@ export default class ValidationStatusBarItem {
 			'This will clear all issues made by the W3C Web Validator extension',
 			false
 		);
+		ValidationStatusBarItem.updateValidationItemTextVisibility();
 	}
 
 	/**
@@ -83,5 +85,13 @@ export default class ValidationStatusBarItem {
 	 */
 	updateVisibility(show: boolean): void {
 		show ? this.item.show() : this.item.hide();
+	}
+
+	static updateValidationItemTextVisibility(): void {
+		activeFileIsValid(vscode.window.activeTextEditor?.document, false)
+			?
+			ValidationStatusBarItem.validationItem.updateContent()
+			:
+			ValidationStatusBarItem.validationItem.updateContent('');
 	}
 }
