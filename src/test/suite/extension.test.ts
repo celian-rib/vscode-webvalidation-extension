@@ -4,14 +4,8 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as extension from '../../extension';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const rewire = require('rewire');
-const validator = rewire('../../extension');
-const activeFileIsValid = validator.__get__('activeFileIsValid');
-const getDiagnostic = validator.__get__('getDiagnostic');
-const getRange = validator.__get__('getRange');
-const getLineRange = validator.__get__('getLineRange');
+import * as utils from '../../utils';
+import IssueDiagnostic from '../../IssueDiagnostic';
 
 suite('Extension Test Suite', () => {
 
@@ -26,9 +20,11 @@ suite('Extension Test Suite', () => {
 	/**
 	 * Check the setup for unit testing with vscode
 	 */
-	test('Sample test', () => {
+	test('Sample test', async () => {
 		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
 		assert.strictEqual(1, [1, 2, 3].indexOf(2));
+		const document = await getTextDocument();
+		assert.ok(document != null);
 	});
 
 	/**
@@ -45,8 +41,8 @@ suite('Extension Test Suite', () => {
 	 */
 	test('activeFileIsValid()', async () => {
 		const document = await getTextDocument();
-		assert.ok(activeFileIsValid(document));
-		assert.ok(!activeFileIsValid(undefined));
+		assert.ok(utils.activeFileIsValid(document));
+		assert.ok(!utils.activeFileIsValid(undefined));
 	});
 
 	const sampleData: extension.IMessage = {
@@ -61,13 +57,13 @@ suite('Extension Test Suite', () => {
 	};
 
 	/**
-	 * Test of getDiagnostic()
+	 * Test of getVSCodeDiagnosticFromMessage()
 	 */
-	test('getDiagnostic()', () => {
-		const diagnostic: vscode.Diagnostic = getDiagnostic(sampleData);
+	test('getVSCodeDiagnosticFromMessage()', () => {
+		const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleData);
 		assert.strictEqual(diagnostic.message, sampleData.message);
 		assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
-		assert.strictEqual(diagnostic.code, 'web_validator');
+		assert.strictEqual(diagnostic.code, 'W3C_validation');
 		assert.strictEqual(diagnostic.source, sampleData.type);
 	});
 
@@ -75,7 +71,7 @@ suite('Extension Test Suite', () => {
 	 * Test of getRange()
 	 */
 	test('getRange()', () => {
-		const range: vscode.Range = getRange(sampleData);
+		const range: vscode.Range = utils.getMessageRange(sampleData);
 		assert.deepStrictEqual(range.start, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1));
 		assert.deepStrictEqual(range.end, new vscode.Position(sampleData.lastLine - 1, sampleData.hiliteStart - 1 + sampleData.hiliteLength));
 	});
@@ -85,7 +81,7 @@ suite('Extension Test Suite', () => {
 	 */
 	test('getLineRange()', async () => {
 		const document = await getTextDocument();
-		const  range = getLineRange(sampleData.lastLine, document);
+		const  range = utils.getLineRange(sampleData.lastLine, document);
 		assert.strictEqual(range, undefined);
 	});
 
