@@ -1,5 +1,9 @@
 # W3C Web validator - Change Log
 
+## [1.1.1]
+
+- Validate compatible files on save (Can be disabled in the extension settings)
+
 ## [1.1.0]
 
 - Structural refactor.
