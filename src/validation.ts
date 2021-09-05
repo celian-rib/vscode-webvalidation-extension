@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { activeFileIsValid } from './utils';
 import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
@@ -7,26 +7,31 @@ import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
+type TargetDocument = vscode.TextDocument | readonly vscode.TextDocument[] | undefined
+type RequestResponse = {
+	document: vscode.TextDocument,
+	response: AxiosResponse<unknown>
+}
+
 /**
  * This is the main method of the extension, it make a request to the W3C API and
  * analyse the response.
  */
-export const startValidation = (activeFileNotValidWarning = true): void => {
+export const startValidation = (target: TargetDocument = undefined,  activeFileNotValidWarning = true): void => {
+	const singleDocument = !(target instanceof Array);
 
-	const document = vscode.window.activeTextEditor?.document;
-	//Check if file is valid
-	//Only suport HTML and CSS files for the moment
-	if (!activeFileIsValid(document, activeFileNotValidWarning)) return;
+	if(target == undefined)
+		target = vscode.window.activeTextEditor?.document;
+	if (target == undefined) return;
 
-	if (!document) return;
+	if (singleDocument)
+		if (!activeFileIsValid(target as vscode.TextDocument, activeFileNotValidWarning)) return;
+
+	let documents: readonly vscode.TextDocument[] = (target instanceof Array) ? target : [target];
+	documents = documents.filter(doc => activeFileIsValid(doc, false));
 
 	//Current diagnostics are cleared, everything is reseted.
 	clearDiagnosticsListAndUpdateWindow(false);
-
-	const fileLanguageID = document.languageId;
-
-	//All the file content as raw text, this will be send as the request body
-	const filecontent = document.getText();
 
 	vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
@@ -39,29 +44,39 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 			console.log('User canceled the validation');
 		});
 
-		return axios.post(W3C_API_URL, filecontent, {
-			headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
-		}).then(response => {
-			return response;
-		}).catch((error) => {
-			console.error(error);
-			vscode.window.showErrorMessage('An error occured.');
-			return null;
-		}).finally(() => {
-			ValidationStatusBarItem.validationItem.updateContent();
+		let requests: Promise<RequestResponse>[] = [];
+		documents.forEach((doc,index) => {
+			progress.report({
+				message: `Validating ${doc.fileName}`,
+				increment: 100 * index / documents.length
+			});
+			const fileLanguageID = doc.languageId;
+			const filecontent = doc.getText();
+			const request = axios.post(W3C_API_URL, filecontent, {
+				headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
+			});
+			const response
+			requests = requests.concat({
+				document: doc,
+
+			});
 		});
-	}).then(response => {
-		if (response) {
-			if (response.data) {//Check if response is not empty
-				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
-					createIssueDiagnosticsList(response.data.messages as IMessage[], document);
-					ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
+		console.log(requests);
+		return Promise.all(requests);
+	}).then(responses => {
+		if (responses) {
+			responses.forEach(response => {
+				if (response.data) {//Check if response is not empty
+					if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
+						createIssueDiagnosticsList(response.data.messages as IMessage[], document);
+						ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
+					} else {
+						vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+					}
 				} else {
-					vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+					vscode.window.showErrorMessage('200, No data.');
 				}
-			} else {
-				vscode.window.showErrorMessage('200, No data.');
-			}
+			});
 		}
 	});
 };
@@ -71,8 +86,9 @@ export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext)
 		vscode.window.showInformationMessage('Files will be checked with W3C on save. You can disable this in the extension settings');
 		context.globalState.update('first_time_save', true);
 	}
+	// vscode.workspace.getConfiguration('first_time_save').update(vali)
 	if (vscode.workspace.getConfiguration('webvalidator').validateOnSave)
-		startValidation(false);
+		startValidation(undefined, false);
 };
 
 /**

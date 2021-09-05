@@ -45,16 +45,5 @@ All errors and warnings have a diagnostic that will help you to correct them.
 
 ***
 
-<details>
-  <summary>Upcoming improvements</summary>
-
-  - Check all your compatible workspace's files at the same time.
-
-  - Auto-check all files in background every ten or twenty minutes.
-
-***
-
-</details>
-
 > [Report a bug](https://github.com/celian-rib/vscode-webvalidation-extension/issues) <br />
 > Author : Riboulet Célian

@@ -40,6 +40,13 @@ export const activate = (context: vscode.ExtensionContext): void => {
 		})
 	);
 
+	//Subscribe start validation command
+	context.subscriptions.push(
+		vscode.commands.registerCommand('webvalidator.startvalidationall', () => {
+			validation.startValidation(vscode.workspace.textDocuments);
+		})
+	);
+
 	//Subscribe clear validation command
 	context.subscriptions.push(
 		vscode.commands.registerCommand('webvalidator.clearvalidation', () => {
