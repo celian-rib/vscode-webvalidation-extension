@@ -44,10 +44,6 @@
 				"title": "Start Web validation on this file"
 			},
 			{
-				"command": "webvalidator.startvalidationall",
-				"title": "Start Web validation on all opened files"
-			},
-			{
 				"command": "webvalidator.clearvalidation",
 				"title": "Clear Web validation issues on file"
 			}
