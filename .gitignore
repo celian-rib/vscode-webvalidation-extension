@@ -6,7 +6,6 @@
 .pnp.js
 out
 dist
-*.vsix
 
 # testing
 /coverage
