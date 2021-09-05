@@ -47,6 +47,18 @@
 				"command": "webvalidator.clearvalidation",
 				"title": "Clear Web validation issues on file"
 			}
+		],
+		"configuration":[
+			{
+				"title": "W3C Web Validator",
+				"properties": {
+					"webvalidator.validateOnSave": {
+						"type": "boolean",
+						"default": true,
+						"description": "Start the validation of a compatible file when you save it"
+					}
+				}
+			}
 		]
 	},
 	"scripts": {

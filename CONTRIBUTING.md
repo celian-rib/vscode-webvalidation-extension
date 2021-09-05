@@ -1,8 +1,20 @@
-## Contributing to the project :
+## Project setup :
+
 - [Fork](https://github.com/celian-rib/vscode-webvalidation-extension/fork) the project
-- Create your branch
-- Commit and push your changes
-- Open a new pull request
+- Install dependencies : ```npm i```
+- Create your feature branch
+
+## Start the project :
+
+- Open debug tab in vscode
+- Select run extension
+- Run
+
+## Run tests :
+
+- Open debug tab in vscode
+- Select extension tests
+- Run
 
 
 ***

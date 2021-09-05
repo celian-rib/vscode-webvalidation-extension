@@ -56,10 +56,17 @@ export const activate = (context: vscode.ExtensionContext): void => {
 		})
 	);
 
-	//Subscribe onDidChangeActiveTextEditor
+	//Subscribe onDidChangeActiveTextEditor (Everytime the active window if changed)
 	context.subscriptions.push(
 		vscode.window.onDidChangeActiveTextEditor(() => {
 			ValidationStatusBarItem.updateValidationItemTextVisibility();
+		})
+	);
+
+	// Subscribe onDidSaveTextDocument (Everytime the active docuent is saved)
+	context.subscriptions.push(
+		vscode.workspace.onDidSaveTextDocument(() => {
+			validation.startValidatationOnSaveHandler(context);
 		})
 	);
 

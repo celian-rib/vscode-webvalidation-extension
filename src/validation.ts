@@ -11,17 +11,17 @@ const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
  * This is the main method of the extension, it make a request to the W3C API and
  * analyse the response.
  */
-export const startValidation = (): void => {
+export const startValidation = (activeFileNotValidWarning = true): void => {
 
 	const document = vscode.window.activeTextEditor?.document;
 	//Check if file is valid
 	//Only suport HTML and CSS files for the moment
-	if (!activeFileIsValid(document)) return;
+	if (!activeFileIsValid(document, activeFileNotValidWarning)) return;
 
 	if (!document) return;
 
 	//Current diagnostics are cleared, everything is reseted.
-	clearDiagnosticsListAndUpdateWindow(false, false);
+	clearDiagnosticsListAndUpdateWindow(false);
 
 	const fileLanguageID = document.languageId;
 
@@ -66,6 +66,15 @@ export const startValidation = (): void => {
 	});
 };
 
+export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext): void => {
+	if(context.globalState.get('first_time_save') != true) {
+		vscode.window.showInformationMessage('Files will be checked with W3C on save. You can disable this in the extension settings');
+		context.globalState.update('first_time_save', true);
+	}
+	if (vscode.workspace.getConfiguration('webvalidator').validateOnSave)
+		startValidation(false);
+};
+
 /**
  * This method create a new list referenced with the global array issueDiagnosticList from
  * the response of the post request to the W3C API
@@ -75,7 +84,7 @@ export const startValidation = (): void => {
 const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument) => {
 	//The list (global variable issueDiagnosticList) is cleared before all.
 	//The goal here is to create or recreate the content of the list.
-	clearDiagnosticsListAndUpdateWindow(false, false);
+	clearDiagnosticsListAndUpdateWindow(false);
 
 	let errorCount = 0;
 	let warningCount = 0;
@@ -111,16 +120,14 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
  * @param onlyWarning set to true if only warnings should be cleared
  * @param editorMessages set to false if no message should be displayed in the editor
  */
-export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false, editorMessages = true): void => {
+export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false): void => {
 	if (onlyWarning) {
 		IssueDiagnostic.clearVSCodeErrorsDiagnostics();
-		if (editorMessages) vscode.window.showWarningMessage('Warnings cleared.');
 		IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
 			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 		});
 	} else {
 		IssueDiagnostic.clearAllVSCodeDiagnostics();
-		if (editorMessages) vscode.window.showWarningMessage('All errors and warnings cleared.');
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
 	}
 };
