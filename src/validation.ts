@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { activeFileIsValid } from './utils';
 import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
@@ -28,42 +28,56 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 	//All the file content as raw text, this will be send as the request body
 	const filecontent = document.getText();
 
-	vscode.window.withProgress({
-		location: vscode.ProgressLocation.Notification,
-		title: 'W3C validation ...',
-		cancellable: false,
-	}, (progress, token) => {
-		ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
+	const showPopup = vscode.workspace.getConfiguration('webvalidator').showPopup;
 
-		token.onCancellationRequested(() => {
-			console.log('User canceled the validation');
-		});
+	if(showPopup){
+		vscode.window.withProgress({
+			location: vscode.ProgressLocation.Notification,
+			title: 'W3C validation ...',
+			cancellable: false,
+		}, (progress, token) => {
+			ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
 
-		return axios.post(W3C_API_URL, filecontent, {
-			headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
+			token.onCancellationRequested(() => {
+				console.log('User canceled the validation');
+			});
+
+			return postToW3C(filecontent, fileLanguageID);
 		}).then(response => {
-			return response;
-		}).catch((error) => {
-			console.error(error);
-			vscode.window.showErrorMessage('An error occured.');
-			return null;
-		}).finally(() => {
-			ValidationStatusBarItem.validationItem.updateContent();
+			handleW3CResponse(response, document, fileLanguageID, showPopup);
 		});
+	}else{
+		postToW3C(filecontent, fileLanguageID).then(response => handleW3CResponse(response, document,fileLanguageID, showPopup));
+	}
+};
+
+const postToW3C = (filecontent:string, fileLanguageID:string) : Promise<AxiosResponse | null> => {
+	return axios.post(W3C_API_URL, filecontent, {
+		headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
 	}).then(response => {
-		if (response) {
-			if (response.data) {//Check if response is not empty
-				if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
-					createIssueDiagnosticsList(response.data.messages as IMessage[], document);
-					ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
-				} else {
-					vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
-				}
-			} else {
-				vscode.window.showErrorMessage('200, No data.');
-			}
-		}
+		return response;
+	}).catch((error) => {
+		console.error(error);
+		vscode.window.showErrorMessage('An error occured.');
+		return null;
+	}).finally(() => {
+		ValidationStatusBarItem.validationItem.updateContent();
 	});
+};
+
+const handleW3CResponse = (response: AxiosResponse|null, document: vscode.TextDocument, fileLanguageID: string , showPopup: boolean) => {
+	if (response) {
+		if (response.data) {//Check if response is not empty
+			if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
+				createIssueDiagnosticsList(response.data.messages as IMessage[], document, showPopup);
+				ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
+			} else {
+				showPopup &&  vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+			}
+		} else {
+			vscode.window.showErrorMessage('200, No data.');
+		}
+	}
 };
 
 export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext): void => {
@@ -80,8 +94,9 @@ export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext)
  * the response of the post request to the W3C API
  * @param requestMessages the response from the W3C API
  * @param document the actual document
+ * @param showPopup show the popup in lower right corner
  */
-const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument) => {
+const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument, showPopup=true) => {
 	//The list (global variable issueDiagnosticList) is cleared before all.
 	//The goal here is to create or recreate the content of the list.
 	clearDiagnosticsListAndUpdateWindow(false);
@@ -106,13 +121,15 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 	});
 
-	vscode.window.showErrorMessage(
-		`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
-		...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
-	).then(selection => {//Ask the user if diagnostics have to be cleared from window
-		if (selection === 'Clear all') { clearDiagnosticsListAndUpdateWindow(); }
-		else if (selection === 'Clear warnings') { clearDiagnosticsListAndUpdateWindow(true); }
-	});
+	if(showPopup){
+		vscode.window.showErrorMessage(
+			`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
+			...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
+		).then(selection => {//Ask the user if diagnostics have to be cleared from window
+			if (selection === 'Clear all') { clearDiagnosticsListAndUpdateWindow(); }
+			else if (selection === 'Clear warnings') { clearDiagnosticsListAndUpdateWindow(true); }
+		});
+	}
 };
 
 /**
