@@ -13,6 +13,8 @@ const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
  */
 export const startValidation = (activeFileNotValidWarning = true): void => {
 
+	ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
+
 	const document = vscode.window.activeTextEditor?.document;
 	//Check if file is valid
 	//Only suport HTML and CSS files for the moment
@@ -30,28 +32,28 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 
 	const showPopup = vscode.workspace.getConfiguration('webvalidator').showPopup;
 
-	if(showPopup){
-		vscode.window.withProgress({
-			location: vscode.ProgressLocation.Notification,
-			title: 'W3C validation ...',
-			cancellable: false,
-		}, (progress, token) => {
-			ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
-
-			token.onCancellationRequested(() => {
-				console.log('User canceled the validation');
-			});
-
-			return postToW3C(filecontent, fileLanguageID);
-		}).then(response => {
-			handleW3CResponse(response, document, fileLanguageID, showPopup);
-		});
-	}else{
-		postToW3C(filecontent, fileLanguageID).then(response => handleW3CResponse(response, document,fileLanguageID, showPopup));
+	if (!showPopup) {
+		postToW3C(filecontent, fileLanguageID).then(response => handleW3CResponse(response, document, fileLanguageID, showPopup));
+		return;
 	}
+
+	vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: 'W3C validation ...',
+		cancellable: false,
+	}, (progress, token) => {
+
+		token.onCancellationRequested(() => {
+			console.log('User canceled the validation');
+		});
+
+		return postToW3C(filecontent, fileLanguageID);
+	}).then(response => {
+		handleW3CResponse(response, document, fileLanguageID, showPopup);
+	});
 };
 
-const postToW3C = (filecontent:string, fileLanguageID:string) : Promise<AxiosResponse | null> => {
+const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosResponse | null> => {
 	return axios.post(W3C_API_URL, filecontent, {
 		headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
 	}).then(response => {
@@ -65,28 +67,19 @@ const postToW3C = (filecontent:string, fileLanguageID:string) : Promise<AxiosRes
 	});
 };
 
-const handleW3CResponse = (response: AxiosResponse|null, document: vscode.TextDocument, fileLanguageID: string , showPopup: boolean) => {
+const handleW3CResponse = (response: AxiosResponse | null, document: vscode.TextDocument, fileLanguageID: string, showPopup: boolean) => {
 	if (response) {
 		if (response.data) {//Check if response is not empty
 			if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
 				createIssueDiagnosticsList(response.data.messages as IMessage[], document, showPopup);
 				ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
 			} else {
-				showPopup &&  vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+				showPopup && vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
 			}
 		} else {
 			vscode.window.showErrorMessage('200, No data.');
 		}
 	}
-};
-
-export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext): void => {
-	if(context.globalState.get('first_time_save') != true) {
-		vscode.window.showInformationMessage('Files will be checked with W3C on save. You can disable this in the extension settings');
-		context.globalState.update('first_time_save', true);
-	}
-	if (vscode.workspace.getConfiguration('webvalidator').validateOnSave)
-		startValidation(false);
 };
 
 /**
@@ -96,7 +89,7 @@ export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext)
  * @param document the actual document
  * @param showPopup show the popup in lower right corner
  */
-const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument, showPopup=true) => {
+const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscode.TextDocument, showPopup = true) => {
 	//The list (global variable issueDiagnosticList) is cleared before all.
 	//The goal here is to create or recreate the content of the list.
 	clearDiagnosticsListAndUpdateWindow(false);
@@ -121,7 +114,7 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 	});
 
-	if(showPopup){
+	if (showPopup) {
 		vscode.window.showErrorMessage(
 			`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
 			...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
@@ -147,4 +140,24 @@ export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false): void =
 		IssueDiagnostic.clearAllVSCodeDiagnostics();
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
 	}
+};
+
+/**
+ * Called everytime a file is saved in vscode
+ * @param context extension context
+ */
+export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext): void => {
+	if (!activeFileIsValid(vscode.window.activeTextEditor?.document, false))
+		return;
+
+	console.log(vscode.workspace.getConfiguration('webvalidator'));
+	if (vscode.workspace.getConfiguration('webvalidator').validateOnSave == false)
+		return;
+
+	if (context.globalState.get('first_time_save') != true) {
+		vscode.window.showInformationMessage('Files will be checked with W3C on save. You can disable this in the extension settings');
+		context.globalState.update('first_time_save', true);
+	}
+
+	startValidation(false);
 };
