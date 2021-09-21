@@ -3,7 +3,7 @@
 	"displayName": "W3C Web Validator",
 	"description": "Check the validity of your HTML/CSS files in one click",
 	"publisher": "CelianRiboulet",
-	"version": "1.1.1",
+	"version": "1.2.0",
 	"icon": "images/webvalidator.png",
 	"engines": {
 		"vscode": "^1.52.0"
@@ -48,7 +48,7 @@
 				"title": "Clear Web validation issues on file"
 			}
 		],
-		"configuration":[
+		"configuration": [
 			{
 				"title": "W3C Web Validator",
 				"properties": {
@@ -56,6 +56,11 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Start the validation of a compatible file when you save it"
+					},
+					"webvalidator.showPopup": {
+						"type": "boolean",
+						"default": true,
+						"description": "Gain insight into the validation process via a popup window in the lower right corner."
 					}
 				}
 			}

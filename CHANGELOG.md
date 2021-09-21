@@ -1,5 +1,9 @@
 # W3C Web validator - Change Log
 
+## [1.2.0]
+
+- Setting to show/hide validation popups
+
 ## [1.1.1]
 
 - Validate compatible files on save (Can be disabled in the extension settings)
