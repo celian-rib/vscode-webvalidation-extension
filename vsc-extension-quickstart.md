@@ -37,3 +37,11 @@
 
  * [Publish your extension](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) on the VSCode extension marketplace.
  * Automate builds by setting up [Continuous Integration](https://code.visualstudio.com/api/working-with-extensions/continuous-integration).
+
+### Create new release :
+
+- Update dependencies ```npm i```
+- Update ./CHANGELOG.md
+- Install vsce ```npm install -g vsce```
+- Bump version in package.json
+- create vsix package ```vsce package```
