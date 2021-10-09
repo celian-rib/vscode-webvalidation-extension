@@ -6,8 +6,7 @@ import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
 import ValidationStatusBarItem from './ValidationStatusBarItem';
 
-const W3C_API_URL = 'https://addtrustchain.test.certificatetest.com/';
-// const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
+const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
 /**
  * This is the main method of the extension, it make a request to the W3C API and
