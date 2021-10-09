@@ -66,7 +66,7 @@ export const activate = (context: vscode.ExtensionContext): void => {
 	// Subscribe onDidSaveTextDocument (Everytime the active document is saved)
 	context.subscriptions.push(
 		vscode.workspace.onDidSaveTextDocument(() => {
-			validation.startValidatationOnSaveHandler(context);
+			validation.startValidatationOnSaveHandler();
 		})
 	);
 

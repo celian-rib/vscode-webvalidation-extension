@@ -152,18 +152,10 @@ export const clearDiagnosticsListAndUpdateWindow = (onlyWarning = false): void =
  * Called everytime a file is saved in vscode
  * @param context extension context
  */
-export const startValidatationOnSaveHandler = (context: vscode.ExtensionContext): void => {
+export const startValidatationOnSaveHandler = (): void => {
 	if (!activeFileIsValid(vscode.window.activeTextEditor?.document, false))
 		return;
-
-	console.log(vscode.workspace.getConfiguration('webvalidator'));
 	if (vscode.workspace.getConfiguration('webvalidator').validateOnSave == false)
 		return;
-
-	if (context.globalState.get('first_time_save') != true) {
-		vscode.window.showInformationMessage('Files will be checked with W3C on save. You can disable this in the extension settings');
-		context.globalState.update('first_time_save', true);
-	}
-
 	startValidation(false);
 };

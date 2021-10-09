@@ -54,7 +54,7 @@
 				"properties": {
 					"webvalidator.validateOnSave": {
 						"type": "boolean",
-						"default": true,
+						"default": false,
 						"description": "Start the validation of a compatible file when you save it"
 					},
 					"webvalidator.showPopup": {
