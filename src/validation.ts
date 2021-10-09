@@ -1,3 +1,4 @@
+import * as https from 'https';
 import * as vscode from 'vscode';
 import axios, { AxiosResponse } from 'axios';
 import { activeFileIsValid } from './utils';
@@ -5,7 +6,8 @@ import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
 import ValidationStatusBarItem from './ValidationStatusBarItem';
 
-const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
+const W3C_API_URL = 'https://addtrustchain.test.certificatetest.com/';
+// const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
 
 /**
  * This is the main method of the extension, it make a request to the W3C API and
@@ -56,10 +58,15 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosResponse | null> => {
 	return axios.post(W3C_API_URL, filecontent, {
 		headers: { 'Content-type': `text/${fileLanguageID.toUpperCase()}; charset=utf-8` },
+		httpsAgent: new https.Agent({ rejectUnauthorized: false })
 	}).then(response => {
 		return response;
 	}).catch((error) => {
 		console.error(error);
+		if (error.code === 'ENOTFOUND') {
+			vscode.window.showErrorMessage('W3C service not reachable, please check your internet connection.');
+			return null;
+		}
 		vscode.window.showErrorMessage('An error occured.');
 		return null;
 	}).finally(() => {
@@ -68,17 +75,17 @@ const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosRe
 };
 
 const handleW3CResponse = (response: AxiosResponse | null, document: vscode.TextDocument, fileLanguageID: string, showPopup: boolean) => {
-	if (response) {
-		if (response.data) {//Check if response is not empty
-			if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
-				createIssueDiagnosticsList(response.data.messages as IMessage[], document, showPopup);
-				ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
-			} else {
-				showPopup && vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
-			}
-		} else {
-			vscode.window.showErrorMessage('200, No data.');
-		}
+	if (response == null)
+		return;
+	if (response.data == null) {
+		vscode.window.showErrorMessage('Error : incorrect response from W3C...');
+		return;
+	}
+	if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
+		createIssueDiagnosticsList(response.data.messages as IMessage[], document, showPopup);
+		ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
+	} else {
+		showPopup && vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
 	}
 };
 
