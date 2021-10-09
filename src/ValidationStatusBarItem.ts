@@ -60,7 +60,7 @@ export default class ValidationStatusBarItem {
 	 * @param defaultText the default text value that this item display
 	 * @param tooltip The tootltip to show when this item is hovered
 	 */
-	constructor(command: string, defaultText: string, defaultIconText: string, tooltip: string, show: boolean) {
+	private constructor(command: string, defaultText: string, defaultIconText: string, tooltip: string, show: boolean) {
 		this.defaultText = defaultText;
 		this.defaultIconText = defaultIconText;
 		this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);

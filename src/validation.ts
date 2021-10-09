@@ -14,8 +14,6 @@ const W3C_API_URL = 'https://validator.w3.org/nu/?out=json';
  */
 export const startValidation = (activeFileNotValidWarning = true): void => {
 
-	ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
-
 	const document = vscode.window.activeTextEditor?.document;
 	//Check if file is valid
 	//Only suport HTML and CSS files for the moment
@@ -23,6 +21,7 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 
 	if (!document) return;
 
+	ValidationStatusBarItem.validationItem.updateContent('Loading', '$(sync~spin)');
 	//Current diagnostics are cleared, everything is reseted.
 	clearDiagnosticsListAndUpdateWindow(false);
 
@@ -68,8 +67,6 @@ const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosRe
 		}
 		vscode.window.showErrorMessage('An error occured.');
 		return null;
-	}).finally(() => {
-		ValidationStatusBarItem.validationItem.updateContent();
 	});
 };
 
@@ -80,11 +77,18 @@ const handleW3CResponse = (response: AxiosResponse | null, document: vscode.Text
 		vscode.window.showErrorMessage('Error : incorrect response from W3C...');
 		return;
 	}
-	if (response.data.messages.length > 0) {//Check if reponse contain errors and warnings found by W3C Validator
+	const validationHasIssues = response.data.messages.length > 0;
+	if (validationHasIssues) {
 		createIssueDiagnosticsList(response.data.messages as IMessage[], document, showPopup);
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
 	} else {
 		showPopup && vscode.window.showInformationMessage(`This ${fileLanguageID.toUpperCase()} file is valid !`);
+	}
+	if (showPopup || validationHasIssues) {
+		ValidationStatusBarItem.validationItem.updateContent();
+	} else {
+		ValidationStatusBarItem.validationItem.updateContent('File is valid');
+		setTimeout(() => ValidationStatusBarItem.validationItem.updateContent(), 2000);
 	}
 };
 
