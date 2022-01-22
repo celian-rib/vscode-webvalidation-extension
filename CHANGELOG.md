@@ -1,5 +1,9 @@
 # W3C Web validator - Change Log
 
+## [1.2.2]
+
+- Better error messaging while W3C validation service is unavailable [#21](https://github.com/celian-rib/vscode-webvalidation-extension/issues/21)
+
 ## [1.2.1]
 
 - Validating on save is no more enabled by default.
