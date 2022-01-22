@@ -1,6 +1,6 @@
 import * as https from 'https';
 import * as vscode from 'vscode';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { activeFileIsValid } from './utils';
 import { IMessage } from './extension';
 import IssueDiagnostic from './IssueDiagnostic';
@@ -32,12 +32,13 @@ export const startValidation = (activeFileNotValidWarning = true): void => {
 
 	const showPopup = vscode.workspace.getConfiguration('webvalidator').showPopup;
 
-	if (!showPopup) {
-		postToW3C(filecontent, fileLanguageID).then(response => handleW3CResponse(response, document, fileLanguageID, showPopup));
+	if (!showPopup) { // Validate silently
+		postToW3C(filecontent, fileLanguageID)
+			.then(response => handleW3CResponse(response, document, fileLanguageID, showPopup));
 		return;
 	}
 
-	vscode.window.withProgress({
+	vscode.window.withProgress({ // Validate with progression popup
 		location: vscode.ProgressLocation.Notification,
 		title: 'W3C validation ...',
 		cancellable: false,
@@ -61,8 +62,12 @@ const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosRe
 		return response;
 	}).catch((error) => {
 		console.error(error);
-		if (error.code === 'ENOTFOUND') {
+		if (error.code == 'ENOTFOUND') {
 			vscode.window.showErrorMessage('W3C service not reachable, please check your internet connection.');
+			return null;
+		}
+		if ((error as AxiosError).response?.status === 503) { // W3C down
+			vscode.window.showErrorMessage('W3C service currently unavailable. Please retry later...');
 			return null;
 		}
 		vscode.window.showErrorMessage('An error occured.');
@@ -71,8 +76,10 @@ const postToW3C = (filecontent: string, fileLanguageID: string): Promise<AxiosRe
 };
 
 const handleW3CResponse = (response: AxiosResponse | null, document: vscode.TextDocument, fileLanguageID: string, showPopup: boolean) => {
-	if (response == null)
+	if (response == null) {
+		ValidationStatusBarItem.validationItem.updateContent();
 		return;
+	}
 	if (response.data == null) {
 		vscode.window.showErrorMessage('Error : incorrect response from W3C...');
 		return;
