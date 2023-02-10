@@ -46,8 +46,20 @@ export default class IssueDiagnostic {
 		this.diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(message);
 		this.lineRange = lineRange;
 		this.lineIntialContent = document.getText(lineRange);
-		IssueDiagnostic.issueDiagnostics.push(this);
+		if(!IssueDiagnostic.isHiddenMessage(this.diagnostic)){
+			IssueDiagnostic.issueDiagnostics.push(this);
+		}
 	}
+
+	/**
+	 * Decide if a message should be hidden from the user
+	 */
+	static isHiddenMessage(diagnostic: vscode.Diagnostic): boolean{
+		const hideInformationMessage = !vscode.workspace.getConfiguration('webvalidator').showInfo && diagnostic.severity ==  vscode.DiagnosticSeverity.Information;
+		const hideWarningMessage = !vscode.workspace.getConfiguration('webvalidator').showWarning && diagnostic.severity ==  vscode.DiagnosticSeverity.Warning;
+		return hideInformationMessage || hideWarningMessage;
+	}
+
 
 	/**
 	 * Clear all the diagnostics on the workspace that are related to the validation
@@ -79,6 +91,9 @@ export default class IssueDiagnostic {
 				severity = vscode.DiagnosticSeverity.Error;
 				break;
 			case 'info':
+				severity = vscode.DiagnosticSeverity.Information;
+				break;
+			case 'warning':
 				severity = vscode.DiagnosticSeverity.Warning;
 				break;
 		}
