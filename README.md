@@ -5,18 +5,16 @@
 </p>
 <p align="center">
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Version" src="https://vsmarketplacebadge.apphb.com/version/CelianRiboulet.webvalidator.svg" />
+      <img alt="Visual Studio Marketplace Version" src="https://img.shields.io/visual-studio-marketplace/v/CelianRiboulet.webvalidator?style=for-the-badge">
     </a>
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Rating" src="https://vsmarketplacebadge.apphb.com/rating-star/CelianRiboulet.webvalidator.svg" />
+      <img alt="Visual Studio Marketplace Rating (Stars)" src="https://img.shields.io/visual-studio-marketplace/stars/CelianRiboulet.webvalidator?color=%23fadf93&style=for-the-badge">
     </a>
-    <br />
-    <br />
     <a href="https://github.com/celian-rib/vscode-webvalidation-extension/actions/workflows/main.yml">
-      <img alt="Build" src="https://github.com/celian-rib/vscode-webvalidation-extension/actions/workflows/main.yml/badge.svg" />
+      <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/celian-rib/vscode-webvalidation-extension/main.yml?style=for-the-badge">
     </a>
     <a href="https://marketplace.visualstudio.com/items?itemName=CelianRiboulet.webvalidator">
-      <img alt="Installs" src="https://vsmarketplacebadge.apphb.com/installs/CelianRiboulet.webvalidator.svg" />
+      <img alt="Visual Studio Marketplace Installs" src="https://img.shields.io/visual-studio-marketplace/i/CelianRiboulet.webvalidator?color=%2365bad6&style=for-the-badge">
     </a>
     <h4 align="center">Validity is one of the quality criteria for a Web page</h4>
 </p>
