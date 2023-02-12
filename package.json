@@ -61,6 +61,16 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Gain insight into the validation process via a popup window in the lower right corner."
+					},
+					"webvalidator.showInfo": {
+						"type": "boolean",
+						"default": true,
+						"description": "Set to false to hide info related validation rules (i.e. Trailing slash)"
+					},
+					"webvalidator.showWarning": {
+						"type": "boolean",
+						"default": true,
+						"description": "Set to false to hide warning related validation rules"
 					}
 				}
 			}

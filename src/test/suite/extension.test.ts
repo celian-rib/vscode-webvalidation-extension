@@ -57,15 +57,56 @@ suite('Extension Test Suite', () => {
 		firstLine: 3
 	};
 
+	const sampleWarningData: extension.IMessage = {
+		extract: 'bonsoir',
+		firstColumn: 10,
+		hiliteLength: 20,
+		hiliteStart: 2,
+		lastColumn: 10,
+		lastLine: 3,
+		message: 'Consider adding a lang attribute to the html start tag to declare the language of this document',
+		type: 'warning'
+	};
+
+	const sampleInfoData: extension.IMessage = {
+		extract: 'bonsoir',
+		firstColumn: 10,
+		hiliteLength: 20,
+		hiliteStart: 2,
+		lastColumn: 10,
+		lastLine: 3,
+		message: 'Trailing slash on void elements has no effect and interacts badly with unquoted attribute values.',
+		type: 'info'
+	};
+
 	/**
 	 * Test of getVSCodeDiagnosticFromMessage()
 	 */
 	test('getVSCodeDiagnosticFromMessage()', () => {
-		const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleData);
-		assert.strictEqual(diagnostic.message, sampleData.message);
-		assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
-		assert.strictEqual(diagnostic.code, 'W3C_validation');
-		assert.strictEqual(diagnostic.source, sampleData.type);
+		test('error type', ()=>{
+			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleData);
+			assert.strictEqual(diagnostic.message, sampleData.message);
+			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
+			assert.strictEqual(diagnostic.code, 'W3C_validation');
+			assert.strictEqual(diagnostic.source, sampleData.type);
+		});
+
+		test('warning type', ()=>{
+			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleWarningData);
+			assert.strictEqual(diagnostic.message, sampleWarningData.message);
+			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Warning);
+			assert.strictEqual(diagnostic.code, 'W3C_validation');
+			assert.strictEqual(diagnostic.source, sampleWarningData.type);
+		});
+
+		test('info type', ()=>{
+			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleInfoData);
+			assert.strictEqual(diagnostic.message, sampleInfoData.message);
+			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Information);
+			assert.strictEqual(diagnostic.code, 'W3C_validation');
+			assert.strictEqual(diagnostic.source, sampleInfoData.type);
+		});
+
 	});
 
 	/**
@@ -85,5 +126,16 @@ suite('Extension Test Suite', () => {
 		const  range = utils.getLineRange(sampleData.lastLine, document);
 		assert.strictEqual(range, undefined);
 	});
+
+
+
+
+	/**
+	 * Test of isHiddenMessage()
+	 */
+	// test('isHiddenMessage()', async () => {
+	// 	const  result = IssueDiagnostic.isHiddenMessage(sampleWarningData.type);
+	// 	assert.strictEqual(result, true);
+	// });
 
 });
