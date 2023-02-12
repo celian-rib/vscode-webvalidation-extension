@@ -113,15 +113,18 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 
 	let errorCount = 0;
 	let warningCount = 0;
+	let infoCount = 0;
 
 	//For each request response, we create a new instance of the IssueDiagnostic class
 	//We also count the warning and error count, ot will then be displayed.
 	requestMessages.forEach(element => {
 		if (element.type === 'error')
 			errorCount++;
-		else
+		else if (element.type === 'info')
+			infoCount++;
+		else{
 			warningCount++;
-
+		}
 		new IssueDiagnostic(element, document);
 	});
 
@@ -132,8 +135,10 @@ const createIssueDiagnosticsList = (requestMessages: IMessage[], document: vscod
 	});
 
 	if (showPopup) {
+		const infoMessage = vscode.workspace.getConfiguration('webvalidator').showInfo ? `, ${infoCount} infos)` : '';
+		const warningMessage = vscode.workspace.getConfiguration('webvalidator').showWarning ? `, ${warningCount} warnings` : '';
 		vscode.window.showErrorMessage(
-			`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
+			`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors${warningMessage}${infoMessage}`,
 			...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
 		).then(selection => {//Ask the user if diagnostics have to be cleared from window
 			if (selection === 'Clear all') { clearDiagnosticsListAndUpdateWindow(); }
