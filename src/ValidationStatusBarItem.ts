@@ -74,6 +74,7 @@ export default class ValidationStatusBarItem {
 	 * Update the content of this status bar item
 	 * @param customText the new text for this item
 	 * @param customIcon the new icon fr this item
+	 * @default defaultText provided in the constructor
 	 */
 	updateContent(customText: string = this.defaultText, customIcon: string = this.defaultIconText): void {
 		this.item.text = `${customIcon} ${customText}`.trim();

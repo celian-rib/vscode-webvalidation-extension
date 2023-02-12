@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { IMessage } from './extension';
 import * as utils from './utils';
+import { IMessage } from './ValidationFile';
+import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 /**
  * Class that contain a vscode.diagnostic and its correponding line's range with the
@@ -135,5 +136,65 @@ export default class IssueDiagnostic {
 
 			resolve(diagnostics.length === 0);
 		});
+	};
+
+	/**
+	 * This method clear all diagnostic on window and in the issueDiagnosticList array
+	 * @param onlyWarning set to true if only warnings should be cleared
+	 * @param editorMessages set to false if no message should be displayed in the editor
+	 */
+	static clearDiagnostics = (onlyWarning = false): void => {
+		if (onlyWarning) {
+			IssueDiagnostic.clearVSCodeErrorsDiagnostics();
+			IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
+				ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
+			});
+		} else {
+			IssueDiagnostic.clearAllVSCodeDiagnostics();
+			ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
+		}
+	};
+
+	/**
+	 * This method create a new list referenced with the global array issueDiagnosticList from
+	 * the response of the post request to the W3C API
+	 * @param requestMessages the response from the W3C API
+	 * @param document the actual document
+	 * @param showPopup show the popup in lower right corner
+	 */
+	static createDiagnostics = (requestMessages: IMessage[], document: vscode.TextDocument, showPopup = true): void => {
+		//The list (global variable issueDiagnosticList) is cleared before all.
+		//The goal here is to create or recreate the content of the list.
+		IssueDiagnostic.clearDiagnostics(false);
+
+		let errorCount = 0;
+		let warningCount = 0;
+
+		//For each request response, we create a new instance of the IssueDiagnostic class
+		//We also count the warning and error count, ot will then be displayed.
+		requestMessages.forEach(element => {
+			if (element.type === 'error')
+				errorCount++;
+			else
+				warningCount++;
+
+			new IssueDiagnostic(element, document);
+		});
+
+		//We now refresh the diagnostics on the current text editor with
+		//the list that is now refilled correctly with the informations of the request
+		IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
+			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
+		});
+
+		if (showPopup) {
+			vscode.window.showErrorMessage(
+				`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors , ${warningCount} warnings)`,
+				...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
+			).then(selection => {//Ask the user if diagnostics have to be cleared from window
+				if (selection === 'Clear all') { IssueDiagnostic.clearDiagnostics(); }
+				else if (selection === 'Clear warnings') { IssueDiagnostic.clearDiagnostics(true); }
+			});
+		}
 	};
 }

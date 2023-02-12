@@ -3,15 +3,15 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import * as extension from '../../extension';
 import * as utils from '../../utils';
 import IssueDiagnostic from '../../IssueDiagnostic';
+import { IMessage } from '../../ValidationFile';
 
 suite('Extension Test Suite', () => {
 
 	const getTextDocument = async (): Promise<vscode.TextDocument> => {
 		return new Promise<vscode.TextDocument>((resolve) => {
-			vscode.workspace.openTextDocument({language: 'html', content: '<>'}).then(doc => {
+			vscode.workspace.openTextDocument({ language: 'html', content: '<>' }).then(doc => {
 				resolve(doc);
 			});
 		});
@@ -45,7 +45,7 @@ suite('Extension Test Suite', () => {
 		assert.ok(!utils.activeFileIsValid(undefined));
 	});
 
-	const sampleData: extension.IMessage = {
+	const sampleData: IMessage = {
 		extract: 'bonsoir',
 		firstColumn: 10,
 		hiliteLength: 20,
@@ -53,7 +53,8 @@ suite('Extension Test Suite', () => {
 		lastColumn: 10,
 		lastLine: 3,
 		message: 'Attribute is not allowed here',
-		type: 'error'
+		type: 'error',
+		firstLine: 3
 	};
 
 	/**

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { IMessage } from './extension';
+import { IMessage } from './ValidationFile';
 
 /**
  * Check if a file is valid for the validity (HTML or CSS), if not this methd handle
@@ -25,7 +25,7 @@ export const activeFileIsValid = (document: vscode.TextDocument | undefined, edi
  * @return the corresponding Range of the given message
  */
 export const getMessageRange = (message: IMessage): vscode.Range => {
-	const startPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1);
+	const startPosition = new vscode.Position((message.firstLine ?? message.lastLine) - 1, message.hiliteStart - 1);
 	const stopPosition = new vscode.Position(message.lastLine - 1, message.hiliteStart - 1 + message.hiliteLength);
 	return new vscode.Range(startPosition, stopPosition);
 };
