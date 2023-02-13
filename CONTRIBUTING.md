@@ -1,17 +1,20 @@
 ## Project setup :
 
 - [Fork](https://github.com/celian-rib/vscode-webvalidation-extension/fork) the project
-- Install dependencies : ```npm i```
+- Install dependencies : `npm i`
 - Create your feature branch
+- Install the eslint vscode extension
 
 ## Start the project :
 
 - Open debug tab in vscode
-- Select run extension
-- Run
+- Select "Run extension" in the drop down menu
+- And then press [Run >]
 
-## Run tests :
+## Run tests
 
-- Open debug tab in vscode
-- Select extension tests
-- Run
+You can run the test suite: `npm run test`.
+
+## More infos
+
+Check out project [vsc-extension-guide](./vsc-extension-guide.md)

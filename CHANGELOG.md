@@ -1,5 +1,10 @@
 # W3C Web validator - Change Log
 
+## [1.3.0]
+
+- Added extension settings to show/hide specific diagnostics levels.
+- Added the possibility to validate partial HTML files (With no Doctype - head - body)
+
 ## [1.2.2]
 
 - Better error messaging while W3C validation service is unavailable [#21](https://github.com/celian-rib/vscode-webvalidation-extension/issues/21)
