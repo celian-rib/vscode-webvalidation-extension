@@ -129,15 +129,13 @@ suite('Extension Test Suite', () => {
 		assert.strictEqual(range, undefined);
 	});
 
-
-
-
 	/**
 	 * Test of isHiddenMessage()
 	 */
-	// test('isHiddenMessage()', async () => {
-	// 	const  result = IssueDiagnostic.isHiddenMessage(sampleWarningData.type);
-	// 	assert.strictEqual(result, true);
-	// });
+	test('isHiddenMessage()', async () => {
+		const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleWarningData);
+		const result = IssueDiagnostic.isHiddenMessage(diagnostic);
+		assert.strictEqual(result, true);
+	});
 
 });

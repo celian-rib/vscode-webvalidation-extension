@@ -4,8 +4,6 @@ import * as validation from './validation';
 import IssueDiagnostic from './IssueDiagnostic';
 import ValidationStatusBarItem from './ValidationStatusBarItem';
 
-
-
 /**
  * This method is called when the extension is activated
  * The extension is activated on launch or on the very
