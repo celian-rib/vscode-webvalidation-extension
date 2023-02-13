@@ -175,9 +175,9 @@ export default class IssueDiagnostic {
 	 * the response of the post request to the W3C API
 	 * @param requestMessages the response from the W3C API
 	 * @param document the actual document
-	 * @param showPopup show the popup in lower right corner
+	 * @param showNotif show the popup in lower right corner
 	 */
-	static createDiagnostics = (requestMessages: IMessage[], document: vscode.TextDocument, showPopup = true): void => {
+	static createDiagnostics = async (requestMessages: IMessage[], document: vscode.TextDocument, showNotif = true): Promise<void> => {
 		//The list (global variable issueDiagnosticList) is cleared before all.
 		//The goal here is to create or recreate the content of the list.
 		IssueDiagnostic.clearDiagnostics(false);
@@ -205,16 +205,19 @@ export default class IssueDiagnostic {
 			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
 		});
 
-		if (showPopup) {
+		if (showNotif) {
 			const infoMessage = vscode.workspace.getConfiguration('webvalidator').showInfo ? `, ${infoCount} infos)` : '';
 			const warningMessage = vscode.workspace.getConfiguration('webvalidator').showWarning ? `, ${warningCount} warnings` : '';
-			vscode.window.showErrorMessage(
+
+			const selection = await vscode.window.showErrorMessage(
 				`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors${warningMessage}${infoMessage}`,
 				...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
-			).then(selection => {//Ask the user if diagnostics have to be cleared from window
-				if (selection === 'Clear all') { IssueDiagnostic.clearDiagnostics(); }
-				else if (selection === 'Clear warnings') { IssueDiagnostic.clearDiagnostics(true); }
-			});
+			);
+
+			if (selection === 'Clear all')
+				IssueDiagnostic.clearDiagnostics();
+			else if (selection === 'Clear warnings')
+				IssueDiagnostic.clearDiagnostics(true);
 		}
 	};
 }

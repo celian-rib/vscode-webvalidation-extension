@@ -58,6 +58,8 @@ export class ValidationFile {
 			return;
 		}
 
+		console.log(w3cResponse.data);
+
 		const messages: IMessage[] = w3cResponse.data.messages;
 
 		if (messages == null) {
@@ -69,21 +71,19 @@ export class ValidationFile {
 	}
 
 	private handleW3CMessages = (messages: IMessage[]): void => {
-		const showPopup = vscode.workspace.getConfiguration('webvalidator').showPopup;
+		const showNotif = vscode.workspace.getConfiguration('webvalidator').validationNotification;
 
 		if (messages.length == 0) {
-			showPopup && vscode.window.showInformationMessage(`This ${this.document.languageId.toUpperCase()} file is valid !`);
+			showNotif && vscode.window.showInformationMessage(`This ${this.document.languageId.toUpperCase()} file is valid !`);
 			ValidationStatusBarItem.validationItem.updateContent('File is valid');
 			setTimeout(() => ValidationStatusBarItem.validationItem.updateContent(), 2000);
 			return;
 		}
 
-		console.log(messages);
 		if (this.isPartialHTML)
 			this.removePartialHTMLHeader(messages);
-		console.log(messages);
 
-		IssueDiagnostic.createDiagnostics(messages, this.document, showPopup);
+		IssueDiagnostic.createDiagnostics(messages, this.document, showNotif);
 
 		ValidationStatusBarItem.clearValidationItem.updateVisibility(true);
 		ValidationStatusBarItem.validationItem.updateContent();
@@ -91,8 +91,9 @@ export class ValidationFile {
 
 	private fetchW3CValidation = async (): Promise<AxiosResponse | null> => {
 		let content = this.content;
+
 		if (this.isPartialHTML)
-			content = this.addPartialHTMLStructure();
+			content = await this.addPartialHTMLStructure();
 
 		try {
 			return await axios.post(W3C_API_URL, content, {
@@ -119,32 +120,119 @@ export class ValidationFile {
 		this.isPartialHTML = !this.content.startsWith('<!DOCTYPE html');
 	}
 
-	private addPartialHTMLStructure(): string {
+	private async getPartialHTMLDoctype(): Promise<vscode.QuickPickItem> {
+		const config = vscode.workspace.getConfiguration('webvalidator').get('partialHtmlDoctype') as string;
+
+		const quickPick = vscode.window.createQuickPick();
+
+		quickPick.title = 'This HTML file is partial, select the DOCTYPE to add to the file :';
+
+		quickPick.items = [
+			{
+				label: 'HTML5',
+				description: 'Add the default HTML5 structure',
+				detail: '<!DOCTYPE html>\n<html lang="en">',
+			},
+			{
+				label: 'XHTML 1.0 Strict',
+				description: 'A strict and well-formed version of XHTML.',
+				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml" lang="en">',
+			},
+			{
+				label: 'XHTML 1.0 Transitional',
+				description: 'A transitional version of XHTML.',
+				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml" lang="en">',
+			},
+			{
+				label: 'HTML 4.01 Strict',
+				description: 'A strict version of HTML 4.01.',
+				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n<html lang="en">',
+			},
+			{
+				label: 'HTML 4.01 Transitional',
+				description: 'A version of HTML 4.01.',
+				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">\n<html lang="en">',
+			},
+		];
+
+		if (!config.toLowerCase().includes('ask')) {
+			const configItem = quickPick.items.find((item) => item.label.toLowerCase() === config.toLowerCase());
+			if (configItem != null)
+				return configItem;
+		}
+
+		// show the quick pick and wait for the user to select an item
+		quickPick.show();
+
+		return await new Promise<vscode.QuickPickItem>((resolve) => {
+			quickPick.onDidAccept(() => {
+				resolve(quickPick.selectedItems[0]);
+				quickPick.hide();
+			});
+			quickPick.onDidHide(() => {
+				resolve(quickPick.items[0]);
+				quickPick.dispose();
+			});
+		});
+	}
+
+	private async addPartialHTMLStructure(): Promise<string> {
+		const partialDoctypeHeader = await this.getPartialHTMLDoctype();
+
+		this.partialValidationPreferences(partialDoctypeHeader);
+
+		const completeHeader = `${partialDoctypeHeader.detail}
+		<head>
+		<title>Partial HTML Document</title>
+		</head>
+		<body>`;
+
+		const completeFooter = '</body>\n</html>';
+
+		this.partialHeaderAddedLines = completeHeader.split('\n').length;
+
 		let processedContent = this.content.trim();
-		this.partialHeaderAddedLines = 9; // Added lines before body content
 
 		if (this.content.startsWith('<body>') && this.content.endsWith('</body>')) {
-			this.partialHeaderAddedLines -= 1; // Added lines after body content
+			this.partialHeaderAddedLines -= 1; // Removed body tag
 			processedContent = this.content.substring(6, this.content.length - 7).trim();
 		}
 
-		return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta http-equiv="X-UA-Compatible" content="IE=edge">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>Document</title>
-			</head>
-			<body>
-			${processedContent} 
-			</body>
-			</html>`;
+		return `${completeHeader}
+				${processedContent}
+				${completeFooter}`;
+	}
+
+	private async partialValidationPreferences(partialDoctypeHeader: vscode.QuickPickItem): Promise<void> {
+		const config = vscode.workspace.getConfiguration('webvalidator');
+
+		if (config.get('validationNotification') == false)
+			return;
+
+		const asked: boolean = (config.get('partialHtmlDoctype') as string).toLowerCase().includes('ask');
+		const options = asked ? [`Always validate as ${partialDoctypeHeader.label}`, 'Set default (Settings)'] : ['Change default DOCTYPE for partial HTML files'];
+
+		const preference = await vscode.window.showInformationMessage(`Validating partial HTML file as ${partialDoctypeHeader.label}`,
+			...(options));
+
+		if (preference?.toLowerCase().includes('always'))
+			config.update('partialHtmlDoctype', partialDoctypeHeader.label, true);
+		else if (preference?.toLowerCase().includes('default'))
+			vscode.commands.executeCommand('workbench.action.openSettings', 'webvalidator.partialHtmlDoctype');
 	}
 
 	private removePartialHTMLHeader(messages: IMessage[]) {
+		const maxLines = this.document.lineCount;
 		messages.forEach((message) => {
 			message.lastLine -= this.partialHeaderAddedLines;
+			if (message.firstLine < 0)
+				message.firstLine = 0;
+			if (message.firstLine > maxLines)
+				message.firstLine = maxLines;
+			if (message.lastLine < 0)
+				message.lastLine = 0;
+			if (message.lastLine > maxLines)
+				message.lastLine = maxLines;
 		});
 	}
 }
