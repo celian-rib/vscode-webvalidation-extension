@@ -120,68 +120,10 @@ export class ValidationFile {
 		this.isPartialHTML = !this.content.startsWith('<!DOCTYPE html');
 	}
 
-	private async getPartialHTMLDoctype(): Promise<vscode.QuickPickItem> {
-		const config = vscode.workspace.getConfiguration('webvalidator').get('partialHtmlDoctype') as string;
-
-		const quickPick = vscode.window.createQuickPick();
-
-		quickPick.title = 'This HTML file is partial, select the DOCTYPE to add to the file :';
-
-		quickPick.items = [
-			{
-				label: 'HTML5',
-				description: 'Add the default HTML5 structure',
-				detail: '<!DOCTYPE html>\n<html lang="en">',
-			},
-			{
-				label: 'XHTML 1.0 Strict',
-				description: 'A strict and well-formed version of XHTML.',
-				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml" lang="en">',
-			},
-			{
-				label: 'XHTML 1.0 Transitional',
-				description: 'A transitional version of XHTML.',
-				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n<html xmlns="http://www.w3.org/1999/xhtml" lang="en">',
-			},
-			{
-				label: 'HTML 4.01 Strict',
-				description: 'A strict version of HTML 4.01.',
-				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">\n<html lang="en">',
-			},
-			{
-				label: 'HTML 4.01 Transitional',
-				description: 'A version of HTML 4.01.',
-				detail: '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">\n<html lang="en">',
-			},
-		];
-
-		if (!config.toLowerCase().includes('ask')) {
-			const configItem = quickPick.items.find((item) => item.label.toLowerCase() === config.toLowerCase());
-			if (configItem != null)
-				return configItem;
-		}
-
-		// show the quick pick and wait for the user to select an item
-		quickPick.show();
-
-		return await new Promise<vscode.QuickPickItem>((resolve) => {
-			quickPick.onDidAccept(() => {
-				resolve(quickPick.selectedItems[0]);
-				quickPick.hide();
-			});
-			quickPick.onDidHide(() => {
-				resolve(quickPick.items[0]);
-				quickPick.dispose();
-			});
-		});
-	}
-
 	private async addPartialHTMLStructure(): Promise<string> {
-		const partialDoctypeHeader = await this.getPartialHTMLDoctype();
-
-		this.partialValidationPreferences(partialDoctypeHeader);
-
-		const completeHeader = `${partialDoctypeHeader.detail}
+		const completeHeader = `
+		<!DOCTYPE html>
+		<html lang="en">
 		<head>
 		<title>Partial HTML Document</title>
 		</head>
@@ -201,24 +143,6 @@ export class ValidationFile {
 		return `${completeHeader}
 				${processedContent}
 				${completeFooter}`;
-	}
-
-	private async partialValidationPreferences(partialDoctypeHeader: vscode.QuickPickItem): Promise<void> {
-		const config = vscode.workspace.getConfiguration('webvalidator');
-
-		if (config.get('validationNotification') == false)
-			return;
-
-		const asked: boolean = (config.get('partialHtmlDoctype') as string).toLowerCase().includes('ask');
-		const options = asked ? [`Always validate as ${partialDoctypeHeader.label}`, 'Set default (Settings)'] : ['Change default DOCTYPE for partial HTML files'];
-
-		const preference = await vscode.window.showInformationMessage(`Validating partial HTML file as ${partialDoctypeHeader.label}`,
-			...(options));
-
-		if (preference?.toLowerCase().includes('always'))
-			config.update('partialHtmlDoctype', partialDoctypeHeader.label, true);
-		else if (preference?.toLowerCase().includes('default'))
-			vscode.commands.executeCommand('workbench.action.openSettings', 'webvalidator.partialHtmlDoctype');
 	}
 
 	private removePartialHTMLHeader(messages: IMessage[]) {

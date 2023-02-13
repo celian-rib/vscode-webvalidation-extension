@@ -71,19 +71,6 @@
 						"type": "boolean",
 						"default": true,
 						"description": "Set to false to hide warning related validation rules"
-					},
-					"webvalidator.partialHtmlDoctype": {
-						"type": "string",
-						"enum": [
-							"Ask before validation",
-							"HTML5",
-							"XHTML 1.0 Strict",
-							"XHTML 1.0 Transitional",
-							"HTML 4.01 Strict",
-							"HTML 4.01 Transitional"
-						],
-						"default": "Ask before validation",
-						"description": "DOCTYPE to use when validating partial HTML files (No DOCTYPE, head amd html tags)"
 					}
 				}
 			}
