@@ -3,15 +3,15 @@ import * as assert from 'assert';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import * as extension from '../../extension';
 import * as utils from '../../utils';
 import IssueDiagnostic from '../../IssueDiagnostic';
+import { IMessage } from '../../ValidationFile';
 
 suite('Extension Test Suite', () => {
 
 	const getTextDocument = async (): Promise<vscode.TextDocument> => {
 		return new Promise<vscode.TextDocument>((resolve) => {
-			vscode.workspace.openTextDocument({language: 'html', content: '<>'}).then(doc => {
+			vscode.workspace.openTextDocument({ language: 'html', content: '<>' }).then(doc => {
 				resolve(doc);
 			});
 		});
@@ -45,7 +45,7 @@ suite('Extension Test Suite', () => {
 		assert.ok(!utils.activeFileIsValid(undefined));
 	});
 
-	const sampleData: extension.IMessage = {
+	const sampleData: IMessage = {
 		extract: 'bonsoir',
 		firstColumn: 10,
 		hiliteLength: 20,
@@ -53,36 +53,39 @@ suite('Extension Test Suite', () => {
 		lastColumn: 10,
 		lastLine: 3,
 		message: 'Attribute is not allowed here',
-		type: 'error'
+		type: 'error',
+		firstLine: 3
 	};
 
-	const sampleWarningData: extension.IMessage = {
+	const sampleWarningData: IMessage = {
 		extract: 'bonsoir',
 		firstColumn: 10,
 		hiliteLength: 20,
 		hiliteStart: 2,
 		lastColumn: 10,
 		lastLine: 3,
+		firstLine: 3,
 		message: 'Consider adding a lang attribute to the html start tag to declare the language of this document',
 		type: 'warning'
 	};
 
-	const sampleInfoData: extension.IMessage = {
+	const sampleInfoData: IMessage = {
 		extract: 'bonsoir',
 		firstColumn: 10,
 		hiliteLength: 20,
 		hiliteStart: 2,
 		lastColumn: 10,
 		lastLine: 3,
+		firstLine: 3,
 		message: 'Trailing slash on void elements has no effect and interacts badly with unquoted attribute values.',
-		type: 'info'
+		type: 'info',
 	};
 
 	/**
 	 * Test of getVSCodeDiagnosticFromMessage()
 	 */
 	test('getVSCodeDiagnosticFromMessage()', () => {
-		test('error type', ()=>{
+		test('error type', () => {
 			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleData);
 			assert.strictEqual(diagnostic.message, sampleData.message);
 			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Error);
@@ -90,7 +93,7 @@ suite('Extension Test Suite', () => {
 			assert.strictEqual(diagnostic.source, sampleData.type);
 		});
 
-		test('warning type', ()=>{
+		test('warning type', () => {
 			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleWarningData);
 			assert.strictEqual(diagnostic.message, sampleWarningData.message);
 			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Warning);
@@ -98,7 +101,7 @@ suite('Extension Test Suite', () => {
 			assert.strictEqual(diagnostic.source, sampleWarningData.type);
 		});
 
-		test('info type', ()=>{
+		test('info type', () => {
 			const diagnostic: vscode.Diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(sampleInfoData);
 			assert.strictEqual(diagnostic.message, sampleInfoData.message);
 			assert.strictEqual(diagnostic.severity, vscode.DiagnosticSeverity.Information);
@@ -122,19 +125,8 @@ suite('Extension Test Suite', () => {
 	 */
 	test('getLineRange()', async () => {
 		const document = await getTextDocument();
-		const  range = utils.getLineRange(sampleData.lastLine, document);
+		const range = utils.getLineRange(sampleData.lastLine, document);
 		assert.strictEqual(range, undefined);
 	});
-
-
-
-
-	/**
-	 * Test of isHiddenMessage()
-	 */
-	// test('isHiddenMessage()', async () => {
-	// 	const  result = IssueDiagnostic.isHiddenMessage(sampleWarningData.type);
-	// 	assert.strictEqual(result, true);
-	// });
 
 });

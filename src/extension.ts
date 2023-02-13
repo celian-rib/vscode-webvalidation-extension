@@ -5,20 +5,6 @@ import IssueDiagnostic from './IssueDiagnostic';
 import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 /**
- * Messages are elements sends as issues by the W3C validation API
- */
-export interface IMessage {
-	extract: string,
-	firstColumn: number,
-	hiliteLength: number,
-	hiliteStart: number,
-	lastColumn: number,
-	lastLine: number,
-	message: string,
-	type: string
-}
-
-/**
  * This method is called when the extension is activated
  * The extension is activated on launch or on the very
  * first time the command is executed
@@ -43,7 +29,7 @@ export const activate = (context: vscode.ExtensionContext): void => {
 	//Subscribe clear validation command
 	context.subscriptions.push(
 		vscode.commands.registerCommand('webvalidator.clearvalidation', () => {
-			validation.clearDiagnosticsListAndUpdateWindow();
+			IssueDiagnostic.clearDiagnostics();
 		})
 	);
 

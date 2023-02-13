@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import { IMessage } from './extension';
 import * as utils from './utils';
+import { IMessage } from './ValidationFile';
+import ValidationStatusBarItem from './ValidationStatusBarItem';
 
 /**
  * Class that contain a vscode.diagnostic and its correponding line's range with the
@@ -46,7 +47,7 @@ export default class IssueDiagnostic {
 		this.diagnostic = IssueDiagnostic.getVSCodeDiagnosticFromMessage(message);
 		this.lineRange = lineRange;
 		this.lineIntialContent = document.getText(lineRange);
-		if(!IssueDiagnostic.isHiddenMessage(this.diagnostic)){
+		if (!IssueDiagnostic.isHiddenMessage(this.diagnostic)) {
 			IssueDiagnostic.issueDiagnostics.push(this);
 		}
 	}
@@ -54,9 +55,9 @@ export default class IssueDiagnostic {
 	/**
 	 * Decide if a message should be hidden from the user
 	 */
-	static isHiddenMessage(diagnostic: vscode.Diagnostic): boolean{
-		const hideInformationMessage = !vscode.workspace.getConfiguration('webvalidator').showInfo && diagnostic.severity ==  vscode.DiagnosticSeverity.Information;
-		const hideWarningMessage = !vscode.workspace.getConfiguration('webvalidator').showWarning && diagnostic.severity ==  vscode.DiagnosticSeverity.Warning;
+	static isHiddenMessage(diagnostic: vscode.Diagnostic): boolean {
+		const hideInformationMessage = !vscode.workspace.getConfiguration('webvalidator').showInfo && diagnostic.severity == vscode.DiagnosticSeverity.Information;
+		const hideWarningMessage = !vscode.workspace.getConfiguration('webvalidator').showWarning && diagnostic.severity == vscode.DiagnosticSeverity.Warning;
 		return hideInformationMessage || hideWarningMessage;
 	}
 
@@ -150,5 +151,73 @@ export default class IssueDiagnostic {
 
 			resolve(diagnostics.length === 0);
 		});
+	};
+
+	/**
+	 * This method clear all diagnostic on window and in the issueDiagnosticList array
+	 * @param onlyWarning set to true if only warnings should be cleared
+	 * @param editorMessages set to false if no message should be displayed in the editor
+	 */
+	static clearDiagnostics = (onlyWarning = false): void => {
+		if (onlyWarning) {
+			IssueDiagnostic.clearVSCodeErrorsDiagnostics();
+			IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
+				ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
+			});
+		} else {
+			IssueDiagnostic.clearAllVSCodeDiagnostics();
+			ValidationStatusBarItem.clearValidationItem.updateVisibility(false);
+		}
+	};
+
+	/**
+	 * This method create a new list referenced with the global array issueDiagnosticList from
+	 * the response of the post request to the W3C API
+	 * @param requestMessages the response from the W3C API
+	 * @param document the actual document
+	 * @param showNotif show the popup in lower right corner
+	 */
+	static createDiagnostics = async (requestMessages: IMessage[], document: vscode.TextDocument, showNotif = true): Promise<void> => {
+		//The list (global variable issueDiagnosticList) is cleared before all.
+		//The goal here is to create or recreate the content of the list.
+		IssueDiagnostic.clearDiagnostics(false);
+
+		let errorCount = 0;
+		let warningCount = 0;
+		let infoCount = 0;
+
+		//For each request response, we create a new instance of the IssueDiagnostic class
+		//We also count the warning and error count, ot will then be displayed.
+		requestMessages.forEach(element => {
+			if (element.type === 'error')
+				errorCount++;
+			else if (element.type === 'info')
+				infoCount++;
+			else
+				warningCount++;
+
+			new IssueDiagnostic(element, document);
+		});
+
+		//We now refresh the diagnostics on the current text editor with
+		//the list that is now refilled correctly with the informations of the request
+		IssueDiagnostic.refreshWindowDiagnostics().then(allCleared => {
+			ValidationStatusBarItem.clearValidationItem.updateVisibility(!allCleared);
+		});
+
+		if (showNotif) {
+			const infoMessage = vscode.workspace.getConfiguration('webvalidator').showInfo ? `, ${infoCount} infos)` : '';
+			const warningMessage = vscode.workspace.getConfiguration('webvalidator').showWarning ? `, ${warningCount} warnings` : '';
+
+			const selection = await vscode.window.showErrorMessage(
+				`This ${document.languageId.toUpperCase()} document is not valid. (${errorCount} errors${warningMessage}${infoMessage}`,
+				...(warningCount > 0 ? ['Clear all', 'Clear warnings'] : ['Clear all'])
+			);
+
+			if (selection === 'Clear all')
+				IssueDiagnostic.clearDiagnostics();
+			else if (selection === 'Clear warnings')
+				IssueDiagnostic.clearDiagnostics(true);
+		}
 	};
 }

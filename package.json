@@ -57,7 +57,7 @@
 						"default": false,
 						"description": "Start the validation of a compatible file when you save it"
 					},
-					"webvalidator.showPopup": {
+					"webvalidator.validationNotification": {
 						"type": "boolean",
 						"default": true,
 						"description": "Gain insight into the validation process via a popup window in the lower right corner."
