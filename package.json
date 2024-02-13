@@ -96,7 +96,7 @@
 		"vscode-test": "^1.4.1"
 	},
 	"dependencies": {
-		"axios": "^0.21.2",
+		"axios": "^1.6.0",
 		"rewire": "^6.0.0"
 	}
 }
